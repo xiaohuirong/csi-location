@@ -65,5 +65,5 @@ for slice_idx in range(slice_num):
     else:
         H = np.concatenate((H, Htmp), axis=0)
 
-    np.save("sample0.npy", H)
+    np.save("data/sample0.npy", H)
     exit()
