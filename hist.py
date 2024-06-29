@@ -1,11 +1,22 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-H = np.load("data/sample0.npy")
+# H (bsz, port_num, ant_num, sc_num)
+H = np.load("data/Round0InputData1.npy", mmap_mode="r")
+
+input_pos = np.loadtxt("data/Round0InputPos1.txt")
+
+index = input_pos[:, 0].astype(int)
+x = input_pos[:, 1]
+y = input_pos[:, 2]
+print(index)
 
 # h (sample_num, port_num, ant_num, sc_num)
+print(H.shape)
 
-h = H[0, ...]
+h = H[index]
+
+np.save("data/Round0InputData1_S1.npy", h)
 
 h_ang = np.angle(h).reshape(-1)
 h_amp = np.abs(h).reshape(-1)
@@ -18,3 +29,5 @@ plt.xlabel("Value")
 plt.ylabel("Frequency")
 
 plt.show()
+
+exit()

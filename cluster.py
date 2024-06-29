@@ -39,10 +39,10 @@ def plot_colorized(positions, groundtruth_positions, title=None, show=True, alph
         plt.show()
 
 
-# pos_index = np.loadtxt("data/Round0InputPos1.txt")
-# index = pos_index[:, 0]
-# pos = pos_index[:, 1:]
+pos_index = np.loadtxt("data/Round0InputPos1.txt")
+index = pos_index[:, 0]
+pos = pos_index[:, 1:]
 
-pos = np.loadtxt("data/Round0GroundTruth1.txt")
+# pos = np.loadtxt("data/Round0GroundTruth1.txt")
 
 plot_colorized(pos, pos, title="Ground Truth Positions")

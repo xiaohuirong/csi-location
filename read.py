@@ -2,9 +2,13 @@ import numpy as np
 
 import itertools
 
-cfg_path = "data/Round0CfgData1.txt"
+from utils.parse_args import parse_args, show_args
 
-inputdata_path = "data/Round0InputData1.txt"
+args = parse_args()
+show_args(args)
+
+cfg_path = args.cfg_data
+inputdata_path = args.input_data
 
 
 # 切片读取函数
@@ -53,11 +57,10 @@ for slice_idx in range(slice_num):
 
     Htmp = np.loadtxt(slice_lines)
 
-    Htmp = np.reshape(Htmp, (slice_samp_num, port_num, ant_num, sc_num, 2), order="F")
+    Htmp = np.reshape(Htmp, (slice_samp_num, 2, sc_num, ant_num, port_num))
 
-    Htmp = Htmp[:, :, :, :, 0] + 1j * Htmp[:, :, :, :, 1]
-
-    print(Htmp[0])
+    Htmp = Htmp[:, 0, :, :, :] + 1j * Htmp[:, 1, :, :, :]
+    Htmp = np.transpose(Htmp, (0, 3, 2, 1))
 
     if np.size(H) == 0:
         H = Htmp
@@ -65,5 +68,4 @@ for slice_idx in range(slice_num):
     else:
         H = np.concatenate((H, Htmp), axis=0)
 
-    np.save("data/sample0.npy", H)
-    exit()
+np.save("data/Round0InputData1.npy", H)
