@@ -14,9 +14,12 @@ print(index)
 # h (sample_num, port_num, ant_num, sc_num)
 print(H.shape)
 
-h = H[index]
+h = H[index - 1]
 
-np.save("data/Round0InputData1_S1.npy", h)
+# h = np.fft.fftshift(h, axes=-1)
+# h = np.fft.ifft(h, axis=-1)
+# h = np.fft.fftshift(h, axes=-1)
+np.save("data/Round0InputData1_S1_new.npy", h)
 
 h_ang = np.angle(h).reshape(-1)
 h_amp = np.abs(h).reshape(-1)
