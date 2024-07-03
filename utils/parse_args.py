@@ -42,6 +42,10 @@ def parse_args():
 
     parser.add_argument("--epoch", type=int, default=5000,
         help="Total epoch")
+
+    parser.add_argument('--test', action='store_true', default=False, 
+                        help='Enable test or not.')
+
     args = parser.parse_args()
 
     # fmt: on

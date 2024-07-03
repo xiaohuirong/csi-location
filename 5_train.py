@@ -108,11 +108,11 @@ feature = torch.from_numpy(feature).float().to(device)
 pos = torch.from_numpy(pos).float().to(device)
 dataset = CustomDataset(feature, pos)
 
-
-test_feature = np.load(test_feature_path)
-test_pos = np.load(test_pos_path)
-test_feature = torch.from_numpy(test_feature).float().to(device)
-test_pos = torch.from_numpy(test_pos).float().to(device)
+if args.test:
+    test_feature = np.load(test_feature_path)
+    test_pos = np.load(test_pos_path)
+    test_feature = torch.from_numpy(test_feature).float().to(device)
+    test_pos = torch.from_numpy(test_pos).float().to(device)
 
 # default : 100
 batch_size = args.bsz
@@ -170,11 +170,12 @@ with tqdm.tqdm(total=epoch_num) as bar:
         scheduler.step()
 
         if epoch % 100 == 0:
-            test_pre_pos = model(test_feature)
-            test_diff = torch.norm(test_pos - test_pre_pos, dim=-1)
-            test_loss = torch.mean(test_diff)
-            # print(f"test loss: {test_loss}")
-            writer.add_scalar("rate/test_loss", test_loss.item(), epoch)
+            if args.test:
+                test_pre_pos = model(test_feature)
+                test_diff = torch.norm(test_pos - test_pre_pos, dim=-1)
+                test_loss = torch.mean(test_diff)
+                # print(f"test loss: {test_loss}")
+                writer.add_scalar("rate/test_loss", test_loss.item(), epoch)
 
         bar.update(1)
 
