@@ -58,7 +58,7 @@ for i in range(slice_num):
     if np.size(all_feature) == 0:
         all_feature = feature
     else:
-        H = np.concatenate((all_feature, feature), axis=0)
+        all_feature = np.concatenate((all_feature, feature), axis=0)
 
 save_path = feature_dir + "F" + args.data
 np.save(save_path, all_feature)
