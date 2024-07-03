@@ -1,17 +1,22 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
+import os
 
 from torch.optim import lr_scheduler
 
 import torch.nn as nn
 import torch.optim as optim
 
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+
 from torch.utils.tensorboard import SummaryWriter
 
-from utils.parse_args import parse_args
+from utils.parse_args import parse_args, show_args
 
 import random
+
+import tqdm
 
 
 def set_seed(tseed):
@@ -109,8 +114,6 @@ test_pos = np.load(test_pos_path)
 test_feature = torch.from_numpy(test_feature).float().to(device)
 test_pos = torch.from_numpy(test_pos).float().to(device)
 
-test_dataset = CustomDataset(test_feature, test_pos)
-
 # default : 100
 batch_size = args.bsz
 
@@ -137,47 +140,45 @@ writer.add_text(
     % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
 )
 
+show_args(args)
 # default : 5000
 epoch_num = args.epoch
-for epoch in range(epoch_num):
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-    all_loss = []
-    for batch in dataloader:
-        features = batch["feature"]
-        pos = batch["pos"]
 
-        pre_pos = model(features)
+with tqdm.tqdm(total=epoch_num) as bar:
+    for epoch in range(epoch_num):
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        all_loss = []
+        for batch in dataloader:
+            feature = batch["feature"]
+            pos = batch["pos"]
 
-        diff = torch.norm(pos - pre_pos, dim=-1)
+            pre_pos = model(feature)
 
-        loss = torch.mean(diff)
+            diff = torch.norm(pos - pre_pos, dim=-1)
 
-        all_loss.append(loss)
+            loss = torch.mean(diff)
 
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-    mean_all_loss = torch.mean(torch.tensor(all_loss))
-    # print(f"train loss: {mean_all_loss.item()}")
-    writer.add_scalar("rate/train_loss", mean_all_loss.item(), epoch)
+            all_loss.append(loss)
 
-    scheduler.step()
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+        mean_all_loss = torch.mean(torch.tensor(all_loss))
+        # print(f"train loss: {mean_all_loss.item()}")
+        writer.add_scalar("rate/train_loss", mean_all_loss.item(), epoch)
 
-    if epoch % 10 == 0:
-        test_dataloader = DataLoader(test_dataset, batch_size=1000, shuffle=False)
-        for batch in test_dataloader:
-            with torch.no_grad():
-                features = batch["feature"]
-                pos = batch["pos"]
+        scheduler.step()
 
-                pre_pos = model(features)
-                diff = torch.norm(pos - pre_pos, dim=-1)
-                loss = torch.mean(diff)
-                # print(f"test loss: {loss}")
-                writer.add_scalar("rate/test_loss", loss.item(), epoch)
-            break
+        if epoch % 100 == 0:
+            test_pre_pos = model(test_feature)
+            test_diff = torch.norm(test_pos - test_pre_pos, dim=-1)
+            test_loss = torch.mean(test_diff)
+            # print(f"test loss: {test_loss}")
+            writer.add_scalar("rate/test_loss", test_loss.item(), epoch)
+
+        bar.update(1)
 
 result_dir = f"data/round{r}/s{s}/result/"
-result_path = result_dir + f"T{args.tseed}Round{r}Model{s}.pth"
+result_path = result_dir + f"M{args.tseed}Round{r}Scene{s}.pth"
 
 torch.save(model.state_dict(), result_path)
