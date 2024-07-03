@@ -7,8 +7,13 @@ from utils.parse_args import parse_args, show_args
 args = parse_args()
 show_args(args)
 
-cfg_path = args.cfg_data
-inputdata_path = args.input_data
+r = args.round
+s = args.scene
+
+dir = f"data/round{r}/s{s}/data/"
+
+cfg_path = dir + f"Round{r}CfgData{s}.txt"
+inputdata_path = dir + f"Round{r}InputData{s}.txt"
 
 
 # 切片读取函数
@@ -68,4 +73,6 @@ for slice_idx in range(slice_num):
     else:
         H = np.concatenate((H, Htmp), axis=0)
 
-np.save("data/Round0InputData1.npy", H)
+save_path = dir + f"Round{r}InputData{s}.npy"
+# H (20000, 2, 64, 408)
+np.save(save_path, H)
