@@ -93,10 +93,10 @@ s = args.scene
 dir = f"data/round{r}/s{s}/data/"
 feature_dir = f"data/round{r}/s{s}/feature/"
 
-feature_path = feature_dir + f"FRound{r}InputData{s}_S.npy"
+feature_path = feature_dir + f"F2Round{r}InputData{s}_S.npy"
 pos_path = dir + f"Round{r}InputPos{s}_S.npy"
 
-test_feature_path = feature_dir + f"FTest{args.seed}Round{r}InputData{s}_S.npy"
+test_feature_path = feature_dir + f"F2Test{args.seed}Round{r}InputData{s}_S.npy"
 test_pos_path = dir + f"Test{args.seed}Round{r}InputPos{s}_S.npy"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -180,6 +180,6 @@ with tqdm.tqdm(total=epoch_num) as bar:
         bar.update(1)
 
 result_dir = f"data/round{r}/s{s}/result/"
-result_path = result_dir + f"M{args.tseed}Round{r}Scene{s}.pth"
+result_path = result_dir + f"2M{args.tseed}Round{r}Scene{s}.pth"
 
 torch.save(model.state_dict(), result_path)
