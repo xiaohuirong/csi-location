@@ -45,10 +45,10 @@ class CustomDataset3(Dataset):
         # self.pos_r : (1, bsz, 2)
         self.pos_r = self.pos.reshape(1, bsz, 2)
         # self.pos_r : (bsz, bsz, 2)
-        self.pos_r = np.tile(self.pos, (bsz, 1, 1))
+        self.pos_r = self.pos_r.repeat(bsz, 1, 1)
 
         # self.feature : (bsz, bsz, 3)
-        self.feature = np.concatenate((self.feature, self.pos_r), axis=-1)
+        self.feature = torch.cat((self.feature, self.pos_r), axis=-1)
 
     def __len__(self):
         return len(self.feature)
