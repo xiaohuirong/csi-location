@@ -16,9 +16,9 @@ tree.txt
             └── result						   # 存放数量网络参数和输出结果
 ```
 
-### 方法一: 基于每个点的信道特征
+# 方法一: 基于每个点的信道特征
 
-#### 1. 数据类型转换
+## 1. 数据类型转换
 
 将txt文本格式的csi信道信息转化为numpy的.npy数据，方便后续计算操作
 
@@ -35,7 +35,7 @@ python 1_data_convert.py --round {r} --scene {s}
 
 - npy格式信道数据:`{dir}/data/Round{r}InputData{s}.npy`
 
-#### 2. 数据切片
+## 2. 数据切片
 
 切片出描点对应的信道信息
 
@@ -54,7 +54,7 @@ python 2_data_slice.py --round {r} --scene {s}
 - 锚点位置: `{dir}/data/Round{r}InputPos{s}_S.npy`
 - 描点数据索引: `{dir}/data/Round{r}Index{s}_S.npy`
 
-#### 3.  生成测试数据切片(可选)
+## 3.  生成测试数据切片(可选)
 
 切片2000组信道信息用于性能测试，实际比赛时无法生成测试数据
 
@@ -75,7 +75,7 @@ python 3_generate_test_data.py --round {r} --scene {s}
 
 - 测试信道索引: `{dir}/data/Test{args.seed}Round{r}Index{s}_S.npy`
 
-#### 4. 特征提取
+## 4. 特征提取
 
 1. 提取所有点信道特征
 
@@ -119,7 +119,7 @@ python 3_generate_test_data.py --round {r} --scene {s}
 
    - 测试信道特征:`{dir}/feature/{m}:FTestRound{r}InputData{s}_S.npy`
 
-#### 5. 训练
+## 5. 训练
 
 利用已有特征训练神经网络，并保存神经网络参数
 
@@ -140,7 +140,7 @@ python 5_train.py --round {r} --scene {s} --bsz 10 --method {m} --tseed 0 [--tes
 
 - 神经网络权重：`{dir}/result/{m}:M{args.tseed}Round{r}Scene{s}.pth`
 
-#### 6. 估计位置
+## 6. 估计位置
 
 使用神经网络权重估计位置
 
@@ -159,7 +159,7 @@ python 6_cal_pos.py --round {r} --scene {s} --method {m}
 
 
 
-#### 7. 评估性能指标
+## 7. 评估性能指标
 
 评估具体场景下的性能差异
 
