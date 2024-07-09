@@ -34,6 +34,33 @@ class CustomDataset(Dataset):
         return sample
 
 
+class CustomDataset3(Dataset):
+    def __init__(self, feature, pos):
+        bsz = feature.shape[0]
+        self.feature = feature
+        self.pos = pos
+
+        # self.feature : (bsz, bsz, 1)
+        self.feature = self.feature.reshape(bsz, bsz, 1)
+        # self.pos_r : (1, bsz, 2)
+        self.pos_r = self.pos.reshape(1, bsz, 2)
+        # self.pos_r : (bsz, bsz, 2)
+        self.pos_r = np.tile(self.pos, (bsz, 1, 1))
+
+        # self.feature : (bsz, bsz, 3)
+        self.feature = np.concatenate((self.feature, self.pos_r), axis=-1)
+
+    def __len__(self):
+        return len(self.feature)
+
+    def __getitem__(self, idx):
+        sample = {
+            "feature": self.feature[idx],
+            "pos": self.pos[idx],
+        }
+        return sample
+
+
 class MLP(nn.Module):
     def __init__(self, input_dim, embedding_dim):
         super(MLP, self).__init__()

@@ -6,7 +6,7 @@ import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 from utils.parse_args import parse_args, show_args
 import tqdm
-from net.MLP import CustomDataset, MLP, set_seed
+from net.MLP import CustomDataset, MLP, set_seed, CustomDataset3
 
 args = parse_args()
 set_seed(args.tseed)
@@ -31,13 +31,19 @@ feature = np.load(feature_path)
 pos = np.load(pos_path)
 feature = torch.from_numpy(feature).float().to(device)
 pos = torch.from_numpy(pos).float().to(device)
-dataset = CustomDataset(feature, pos)
 
 if args.test:
     test_feature = np.load(test_feature_path)
     test_pos = np.load(test_pos_path)
     test_feature = torch.from_numpy(test_feature).float().to(device)
     test_pos = torch.from_numpy(test_pos).float().to(device)
+
+if m == 3:
+    dataset = CustomDataset3(feature, pos)
+    test_dataset = CustomDataset3(test_feature, test_pos)
+else:
+    dataset = CustomDataset(feature, pos)
+    test_dataset = CustomDataset(test_feature, test_pos)
 
 # default : 100
 batch_size = args.bsz
@@ -69,13 +75,19 @@ show_args(args)
 # default : 5000
 epoch_num = args.epoch
 
+test_dataloader = DataLoader(test_dataset, batch_size=2000, shuffle=False)
+
 with tqdm.tqdm(total=epoch_num) as bar:
     for epoch in range(epoch_num):
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
         all_loss = []
         for batch in dataloader:
-            feature = batch["feature"]
-            pos = batch["pos"]
+            if m == 3:
+                feature = batch["feature"].reshape(batch_size * 20, 100)
+                pos = batch["pos"].repeat(20, axis=0)
+            else:
+                feature = batch["feature"]
+                pos = batch["pos"]
 
             pre_pos = model(feature)
 
@@ -94,8 +106,14 @@ with tqdm.tqdm(total=epoch_num) as bar:
 
         scheduler.step()
 
-        if epoch % 100 == 0:
-            if args.test:
+        if epoch % 100 == 0 and args.test:
+            for test_batch in test_dataloader:
+                if m == 3:
+                    test_feature = test_batch["feature"].reshape(batch_size * 20, 100)
+                    test_pos = test_batch["pos"].repeat(20, axis=0)
+                else:
+                    test_feature = test_batch["feature"]
+                    test_pos = test_batch["pos"]
                 test_pre_pos = model(test_feature)
                 test_diff = torch.norm(test_pos - test_pre_pos, dim=-1)
                 test_loss = torch.mean(test_diff)
