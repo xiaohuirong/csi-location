@@ -1,88 +1,12 @@
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 import numpy as np
-import os
-
 from torch.optim import lr_scheduler
-
-import torch.nn as nn
 import torch.optim as optim
-
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
-
 from torch.utils.tensorboard import SummaryWriter
-
 from utils.parse_args import parse_args, show_args
-
-import random
-
 import tqdm
-
-
-def set_seed(tseed):
-    torch.manual_seed(tseed)
-    torch.cuda.manual_seed(tseed)
-    torch.cuda.manual_seed_all(tseed)  # if you are using multi-GPU.
-    np.random.seed(tseed)
-    random.seed(tseed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
-
-
-class CustomDataset(Dataset):
-    def __init__(self, feature, pos):
-        self.feature = feature
-        self.pos = pos
-
-    def __len__(self):
-        return len(self.feature)
-
-    def __getitem__(self, idx):
-        sample = {
-            "feature": self.feature[idx],
-            "pos": self.pos[idx],
-        }
-        return sample
-
-
-class CustomNetwork(nn.Module):
-    def __init__(self, input_dim, embedding_dim):
-        super(CustomNetwork, self).__init__()
-
-        # 定义嵌入层
-        self.embedding = nn.Linear(input_dim, embedding_dim)
-
-        # 定义全连接层
-        self.fc1 = nn.Linear(embedding_dim, 512)
-        self.fc2 = nn.Linear(512, 256)
-        self.fc3 = nn.Linear(256, 128)
-        self.fc4 = nn.Linear(128, 64)
-        self.fc5 = nn.Linear(64, 2)
-
-        # 定义激活函数
-        self.relu = nn.ReLU()
-
-    def forward(self, x):
-        # 前向传播
-        x = self.embedding(x)
-        x = self.relu(x)
-
-        x = self.fc1(x)
-        x = self.relu(x)
-
-        x = self.fc2(x)
-        x = self.relu(x)
-
-        x = self.fc3(x)
-        x = self.relu(x)
-
-        x = self.fc4(x)
-        x = self.relu(x)
-
-        x = self.fc5(x)
-
-        return x
-
+from net.MLP import CustomDataset, MLP, set_seed
 
 args = parse_args()
 set_seed(args.tseed)
@@ -130,7 +54,7 @@ lr = args.lr
 step = args.step
 # default 0.9
 gamma = args.gamma
-model = CustomNetwork(input_dim, embedding_dim).to(device)
+model = MLP(input_dim, embedding_dim).to(device)
 optimizer = optim.Adam(model.parameters(), lr=lr)
 scheduler = lr_scheduler.StepLR(optimizer, step_size=step, gamma=gamma)
 
