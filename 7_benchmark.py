@@ -8,12 +8,13 @@ show_args(args)
 
 r = args.round
 s = args.scene
+m = args.method
 
 data_dir = f"data/round{r}/s{s}/data/"
 result_dir = f"data/round{r}/s{s}/result/"
 
 truth_pos_path = data_dir + f"Round{r}GroundTruth{s}.txt"
-pre_pos_path = result_dir + f"Round{r}OutputPos{s}.txt"
+pre_pos_path = result_dir + f"{m}:Round{r}OutputPos{s}.txt"
 
 
 truth_pos = np.loadtxt(truth_pos_path)

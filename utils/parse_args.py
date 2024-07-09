@@ -46,6 +46,9 @@ def parse_args():
     parser.add_argument('--test', action='store_true', default=False, 
                         help='Enable test or not.')
 
+    parser.add_argument("--method", type=int, default=1,
+        help="Solve method")
+
     args = parser.parse_args()
 
     # fmt: on

@@ -59,16 +59,17 @@ set_seed(args.tseed)
 
 r = args.round
 s = args.scene
+m = args.method
 
 dir = f"data/round{r}/s{s}/data/"
 feature_dir = f"data/round{r}/s{s}/feature/"
 
 result_dir = f"data/round{r}/s{s}/result/"
-weight_path = result_dir + f"M{args.tseed}Round{r}Scene{s}.pth"
+weight_path = result_dir + f"{m}:M{args.tseed}Round{r}Scene{s}.pth"
 
-result_path = result_dir + f"Round{r}OutputPos{s}.txt"
+result_path = result_dir + f"{m}:Round{r}OutputPos{s}.txt"
 
-test_feature_path = feature_dir + f"FRound{r}InputData{s}.npy"
+test_feature_path = feature_dir + f"{m}:FRound{r}InputData{s}.npy"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

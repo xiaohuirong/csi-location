@@ -60,5 +60,5 @@ for i in range(slice_num):
     else:
         all_feature = np.concatenate((all_feature, feature), axis=0)
 
-save_path = feature_dir + "F" + args.data
+save_path = feature_dir + f"{args.method}:" + "F" + args.data
 np.save(save_path, all_feature)
