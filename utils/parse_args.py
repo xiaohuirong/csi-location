@@ -46,6 +46,12 @@ def parse_args():
     parser.add_argument('--test', action='store_true', default=False, 
                         help='Enable test or not.')
 
+    parser.add_argument("--port", type=int, default=0,
+        help="Port index")
+
+    parser.add_argument("--over", type=int, default=0,
+        help="Overtension index")
+
     parser.add_argument("--method", type=int, default=1,
         help="Solve method")
 
