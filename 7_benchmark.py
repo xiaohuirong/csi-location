@@ -13,23 +13,22 @@ m = args.method
 data_dir = f"data/round{r}/s{s}/data/"
 result_dir = f"data/round{r}/s{s}/result/"
 
-truth_pos_path = data_dir + f"Round{r}GroundTruth{s}.txt"
 pre_pos_path = result_dir + f"{m}:Round{r}OutputPos{s}.txt"
-
-
-truth_pos = np.loadtxt(truth_pos_path)
 pre_pos = np.loadtxt(pre_pos_path)
 
+if args.test:
+    truth_pos_path = data_dir + f"Round{r}GroundTruth{s}.txt"
+    truth_pos = np.loadtxt(truth_pos_path)
 
-distance = np.linalg.norm(truth_pos - pre_pos, axis=-1)
+    distance = np.linalg.norm(truth_pos - pre_pos, axis=-1)
 
-mean_distance = np.mean(distance)
+    mean_distance = np.mean(distance)
+    print(mean_distance)
 
 fig, axes = plt.subplots(1, 2, figsize=(20, 10))
 
-axes[0].scatter(truth_pos[:, 0], truth_pos[:, 1])
+if args.test:
+    axes[0].scatter(truth_pos[:, 0], truth_pos[:, 1])
 axes[1].scatter(pre_pos[:, 0], pre_pos[:, 1])
-
-print(mean_distance)
 
 plt.show()
