@@ -40,10 +40,12 @@ if args.test:
 
 if m == 3:
     dataset = CustomDataset3(feature, pos)
-    test_dataset = CustomDataset3(test_feature, test_pos)
+    if args.test:
+        test_dataset = CustomDataset3(test_feature, test_pos)
 else:
     dataset = CustomDataset(feature, pos)
-    test_dataset = CustomDataset(test_feature, test_pos)
+    if args.test:
+        test_dataset = CustomDataset(test_feature, test_pos)
 
 # default : 100
 batch_size = args.bsz
@@ -80,7 +82,8 @@ show_args(args)
 # default : 5000
 epoch_num = args.epoch
 
-test_dataloader = DataLoader(test_dataset, batch_size=2000, shuffle=False)
+if args.test:
+    test_dataloader = DataLoader(test_dataset, batch_size=2000, shuffle=False)
 
 with tqdm.tqdm(total=epoch_num) as bar:
     for epoch in range(epoch_num):
@@ -114,7 +117,9 @@ with tqdm.tqdm(total=epoch_num) as bar:
         if epoch % 100 == 0 and args.test:
             for test_batch in test_dataloader:
                 if m == 3:
-                    test_feature = test_batch["feature"].reshape(2000 * p, input_dim // p * 3)
+                    test_feature = test_batch["feature"].reshape(
+                        2000 * p, input_dim // p * 3
+                    )
                     test_pos = test_batch["pos"].repeat_interleave(p, dim=0)
                 else:
                     test_feature = test_batch["feature"]
