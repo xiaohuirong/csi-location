@@ -71,7 +71,7 @@ else:
 optimizer = optim.Adam(model.parameters(), lr=lr)
 scheduler = lr_scheduler.StepLR(optimizer, step_size=step, gamma=gamma)
 
-writer = SummaryWriter(f"runs/Round{r}Scene{s}-{args.time}")
+writer = SummaryWriter(f"runs/R{r}S{s}M{m}-{args.time}")
 writer.add_text(
     "parameter",
     "|param|value|\n|-|-|\n%s"
