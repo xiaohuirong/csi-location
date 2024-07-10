@@ -60,7 +60,7 @@ for slice_idx in range(slice_num):
         inputdata_path, slice_idx * slice_samp_num, (slice_idx + 1) * slice_samp_num
     )
 
-    Htmp = np.loadtxt(slice_lines)
+    Htmp = np.loadtxt(slice_lines).astype(np.float32)
 
     Htmp = np.reshape(Htmp, (slice_samp_num, 2, sc_num, ant_num, port_num))
 
