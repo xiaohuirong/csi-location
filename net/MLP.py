@@ -1,7 +1,7 @@
 import torch
 import random
 import numpy as np
-from torch.utils.data import Dataset
+from torch.utils.data import DataLoader, Dataset, Sampler
 import os
 import torch.nn as nn
 
@@ -18,6 +18,53 @@ def set_seed(tseed):
     torch.backends.cudnn.benchmark = False
 
 
+class CustomBatchSampler(Sampler):
+    def __init__(self, dataset, batch_size, data):
+        self.dataset = dataset
+        self.batch_size = batch_size
+        self.l_dataset = len(dataset)
+        self.indices = list(range(self.l_dataset))
+        self.data = data
+        self.batch_num = self.l_dataset // self.batch_size
+
+        self.sampled_list = random.sample(self.indices, self.batch_num)
+
+    def __iter__(self):
+        # 实现自定义的分批规则，这里简单实现按顺序分批
+        batches = []
+
+        for i in self.sampled_list:
+            _, batch = torch.topk(self.data[i], self.batch_size, largest=False)
+            batches.append(batch)
+        return iter(batches)
+
+    def __len__(self):
+        return len(self.indices) // self.batch_size
+
+
+class CustomDataLoader(DataLoader):
+    def __init__(self, dataset, batch_size=1, data=None, **kwargs):
+        batch_sampler = CustomBatchSampler(dataset, batch_size, data)
+        super().__init__(dataset, batch_sampler=batch_sampler, **kwargs)
+
+    def __iter__(self):
+        for indices in self.batch_sampler:
+            batch = [self.dataset[i] for i in indices]
+            yield batch
+
+
+# 示例数据集
+class ExampleDataset(Dataset):
+    def __init__(self, data):
+        self.data = data
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx]
+
+
 class CustomDataset(Dataset):
     def __init__(self, feature, pos):
         self.feature = feature
@@ -29,7 +76,7 @@ class CustomDataset(Dataset):
     def __getitem__(self, idx):
         sample = {
             "feature": self.feature[idx],
-            "pos": self.pos[idx],
+            "pos": self.pos[idx % 2000],
             "index": idx,
         }
         return sample
@@ -122,3 +169,13 @@ def cal_loss(pre_pos, h_dis):
     loss = torch.mean(torch.abs(pre_dis - h_dis))
 
     return loss
+
+
+if __name__ == "__main__":
+    # 使用自定义 DataLoader
+    dataset = ExampleDataset([i for i in range(100)])
+    data = np.random.rand(100, 100)
+    custom_dataloader = CustomDataLoader(dataset, batch_size=5, data=data)
+
+    for batch in custom_dataloader:
+        print(batch)

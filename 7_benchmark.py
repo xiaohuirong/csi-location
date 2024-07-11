@@ -3,6 +3,30 @@ import matplotlib.pyplot as plt
 
 from utils.parse_args import parse_args, show_args
 
+
+def get_color_map(positions):
+    # Generate RGB colors for datapoints
+    center_point = np.zeros(2, dtype=np.float32)
+    center_point[0] = 0.5 * (
+        np.min(positions[:, 0], axis=0) + np.max(positions[:, 0], axis=0)
+    )
+    center_point[1] = 0.5 * (
+        np.min(positions[:, 1], axis=0) + np.max(positions[:, 1], axis=0)
+    )
+
+    def NormalizeData(in_data):
+        return (in_data - np.min(in_data)) / (np.max(in_data) - np.min(in_data))
+
+    rgb_values = np.zeros((positions.shape[0], 3))
+    rgb_values[:, 0] = 1 - 0.9 * NormalizeData(positions[:, 0])
+    rgb_values[:, 1] = 0.8 * NormalizeData(
+        np.square(np.linalg.norm(positions - center_point, axis=1))
+    )
+    rgb_values[:, 2] = 0.9 * NormalizeData(positions[:, 1])
+
+    return rgb_values
+
+
 args = parse_args()
 show_args(args)
 
@@ -25,10 +49,15 @@ if args.test:
     mean_distance = np.mean(distance)
     print(mean_distance)
 
+color = get_color_map(pre_pos)
+
 fig, axes = plt.subplots(1, 2, figsize=(20, 10))
 
 if args.test:
-    axes[0].scatter(truth_pos[:, 0], truth_pos[:, 1])
-axes[1].scatter(pre_pos[:, 0], pre_pos[:, 1])
+    axes[0].scatter(truth_pos[:, 0], truth_pos[:, 1], c=color, alpha=0.8)
+axes[1].scatter(pre_pos[:, 0], pre_pos[:, 1], c=color, alpha=0.8)
 
+axes[0].set_aspect("equal", "box")
+axes[1].set_aspect("equal", "box")
+fig.tight_layout()
 plt.show()
