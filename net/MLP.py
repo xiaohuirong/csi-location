@@ -30,6 +30,7 @@ class CustomDataset(Dataset):
         sample = {
             "feature": self.feature[idx],
             "pos": self.pos[idx],
+            "index": idx,
         }
         return sample
 
@@ -57,6 +58,7 @@ class CustomDataset3(Dataset):
         sample = {
             "feature": self.feature[idx],
             "pos": self.pos[idx],
+            "index": idx,
         }
         return sample
 
@@ -98,3 +100,25 @@ class MLP(nn.Module):
         x = self.fc5(x)
 
         return x
+
+
+def cal_loss(pre_pos, h_dis):
+    """
+    input:
+        pre_pos: (bsz, 2) -> pre_dis: (bsz, bsz)
+        h_dis: (bsz, bsz)
+
+    output:
+        loss: pre_dis - h_dis
+    """
+    bsz = pre_pos.shape[0]
+
+    # diff_pos (bsz, bsz, 2)
+    diff_pos = pre_pos.reshape(bsz, 1, 2) - pre_pos.reshape(1, bsz, 2)
+
+    # pre_dis (bsz, bsz)
+    pre_dis = torch.norm(diff_pos, dim=-1)
+
+    loss = torch.mean(torch.abs(pre_dis - h_dis))
+
+    return loss

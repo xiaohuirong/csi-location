@@ -6,7 +6,7 @@ import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 from utils.parse_args import parse_args, show_args
 import tqdm
-from net.MLP import CustomDataset, MLP, set_seed, CustomDataset3
+from net.MLP import CustomDataset, MLP, set_seed, CustomDataset3, cal_loss
 
 args = parse_args()
 set_seed(args.tseed)
@@ -14,11 +14,16 @@ set_seed(args.tseed)
 r = args.round
 s = args.scene
 m = args.method
+p = args.port
+o = args.over
 
 dir = f"data/round{r}/s{s}/data/"
 feature_dir = f"data/round{r}/s{s}/feature/"
 
-feature_path = feature_dir + f"{m}:FRound{r}InputData{s}_S.npy"
+if m == 4:
+    feature_path = feature_dir + f"{m}:FRound{r}InputData{s}.npy"
+else:
+    feature_path = feature_dir + f"{m}:FRound{r}InputData{s}_S.npy"
 pos_path = dir + f"Round{r}InputPos{s}_S.npy"
 
 test_feature_path = feature_dir + f"{m}:FTest{args.seed}Round{r}InputData{s}_S.npy"
@@ -28,8 +33,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 feature = np.load(feature_path)
-pos = np.load(pos_path)
 feature = torch.from_numpy(feature).float().to(device)
+
+pos = np.load(pos_path)
 pos = torch.from_numpy(pos).float().to(device)
 
 if args.test:
@@ -85,6 +91,11 @@ epoch_num = args.epoch
 if args.test:
     test_dataloader = DataLoader(test_dataset, batch_size=2000, shuffle=False)
 
+if args.method == 4:
+    dmg_path = f"data/round{r}/s{s}/feature/Port{p}Over{o}Dmg{r}Scene{s}.npy"
+    dmg = np.load(dmg_path)
+    dmg = torch.from_numpy(dmg).to(device)
+
 with tqdm.tqdm(total=epoch_num) as bar:
     for epoch in range(epoch_num):
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
@@ -96,14 +107,17 @@ with tqdm.tqdm(total=epoch_num) as bar:
             else:
                 feature = batch["feature"]
                 pos = batch["pos"]
+                index = batch["index"]
 
             pre_pos = model(feature)
 
-            diff = torch.norm(pos - pre_pos, dim=-1)
+            if m == 4:
+                loss = cal_loss(pre_pos, dmg[index, :][:, index])
+            else:
+                diff = torch.norm(pos - pre_pos, dim=-1)
+                loss = torch.mean(diff)
 
-            loss = torch.mean(diff)
-
-            all_loss.append(loss)
+            all_loss.append(loss.item())
 
             optimizer.zero_grad()
             loss.backward()
