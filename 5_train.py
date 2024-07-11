@@ -62,7 +62,7 @@ input_dim = feature.shape[1]
 # defautl : 1024
 embedding_dim = args.embedding
 
-p = 100
+k = 100
 
 # defautl 1e-3
 lr = args.lr
@@ -71,7 +71,7 @@ step = args.step
 # default 0.9
 gamma = args.gamma
 if m == 3:
-    model = MLP(input_dim // p * 3, embedding_dim).to(device)
+    model = MLP(input_dim // k * 3, embedding_dim).to(device)
 else:
     model = MLP(input_dim, embedding_dim).to(device)
 optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -102,7 +102,7 @@ with tqdm.tqdm(total=epoch_num) as bar:
         all_loss = []
         for batch in dataloader:
             if m == 3:
-                feature = batch["feature"].reshape(batch_size * p, input_dim // p * 3)
+                feature = batch["feature"].reshape(batch_size * k, input_dim // k * 3)
                 pos = batch["pos"].repeat_interleave(p, dim=0)
             else:
                 feature = batch["feature"]
@@ -132,9 +132,9 @@ with tqdm.tqdm(total=epoch_num) as bar:
             for test_batch in test_dataloader:
                 if m == 3:
                     test_feature = test_batch["feature"].reshape(
-                        2000 * p, input_dim // p * 3
+                        2000 * k, input_dim // k * 3
                     )
-                    test_pos = test_batch["pos"].repeat_interleave(p, dim=0)
+                    test_pos = test_batch["pos"].repeat_interleave(k, dim=0)
                 else:
                     test_feature = test_batch["feature"]
                     test_pos = test_batch["pos"]
