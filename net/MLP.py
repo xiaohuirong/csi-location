@@ -49,7 +49,7 @@ class CustomDataLoader(DataLoader):
 
     def __iter__(self):
         for indices in self.batch_sampler:
-            batch = [self.dataset[i] for i in indices]
+            batch = self.dataset[indices]
             yield batch
 
 
