@@ -13,7 +13,14 @@ s = args.scene
 data_path = f"data/round{r}/s{s}/data/Round{r}InputData{s}_S.npy"
 dis_f_path = f"data/round{r}/s{s}/feature/FDis{r}Scene{s}_S.npy"
 
-H = np.load(data_path, mmap_mode="r")
+test_data_path = f"data/round{r}/s{s}/data/Test{args.seed}Round{r}InputData{s}_S.npy"
+test_dis_f_path = f"data/round{r}/s{s}/feature/Test{args.seed}FDis{r}Scene{s}_S.npy"
+
+if not args.test:
+    H = np.load(data_path, mmap_mode="r")
+else:
+    H = np.load(test_data_path, mmap_mode="r")
+
 [bsz, port_num, ant_num, sr_num] = H.shape
 H = H.reshape(bsz, port_num * 2, ant_num // 2, sr_num)
 
@@ -80,4 +87,7 @@ with tqdm.tqdm(total=bsz**2) as pbar:
                 adp_dissimilarity_matrix[i:, i, k] = d[k]
             pbar.update(2 * len(d[0]) - 1)
 
-np.save(dis_f_path, adp_dissimilarity_matrix)
+if not args.test:
+    np.save(dis_f_path, adp_dissimilarity_matrix)
+else:
+    np.save(test_dis_f_path, adp_dissimilarity_matrix)

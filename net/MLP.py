@@ -110,6 +110,22 @@ class CustomDataset3(Dataset):
         return sample
 
 
+class CustomDataset5(Dataset):
+    def __init__(self, feature, dis):
+        self.feature = feature
+        self.dis = dis
+
+    def __len__(self):
+        return len(self.feature)
+
+    def __getitem__(self, idx):
+        sample = {
+            "feature": self.feature[idx],
+            "dis": self.dis[idx],
+        }
+        return sample
+
+
 class MLP(nn.Module):
     def __init__(self, input_dim, embedding_dim):
         super(MLP, self).__init__()
@@ -154,7 +170,7 @@ class MLP2(nn.Module):
         super(MLP2, self).__init__()
 
         # 定义嵌入层
-        self.embedding = nn.Linear(input_dim, 12)
+        self.embedding = nn.Linear(input_dim, embedding_dim)
 
         # 定义全连接层
         self.fc1 = nn.Linear(embedding_dim, 6)
