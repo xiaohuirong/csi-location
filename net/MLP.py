@@ -149,6 +149,33 @@ class MLP(nn.Module):
         return x
 
 
+class MLP2(nn.Module):
+    def __init__(self, input_dim, embedding_dim):
+        super(MLP2, self).__init__()
+
+        # 定义嵌入层
+        self.embedding = nn.Linear(input_dim, 12)
+
+        # 定义全连接层
+        self.fc1 = nn.Linear(embedding_dim, 6)
+        self.fc2 = nn.Linear(6, 1)
+
+        # 定义激活函数
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        # 前向传播
+        x = self.embedding(x)
+        x = self.relu(x)
+
+        x = self.fc1(x)
+        x = self.relu(x)
+
+        x = self.fc2(x)
+
+        return x
+
+
 def cal_loss(pre_pos, h_dis):
     """
     input:
