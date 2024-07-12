@@ -37,12 +37,18 @@ m = args.method
 data_dir = f"data/round{r}/s{s}/data/"
 result_dir = f"data/round{r}/s{s}/result/"
 
+cluster_index_path = data_dir + f"ClusterRound{r}Index{s}_S.npy"
+clu_index = np.load(cluster_index_path)
+
 pre_pos_path = result_dir + f"{m}:Round{r}OutputPos{s}.txt"
 pre_pos = np.loadtxt(pre_pos_path)
 
 if args.test:
     truth_pos_path = data_dir + f"Round{r}GroundTruth{s}.txt"
     truth_pos = np.loadtxt(truth_pos_path)
+
+    if m == 5:
+        truth_pos = truth_pos[clu_index]
 
     distance = np.linalg.norm(truth_pos - pre_pos, axis=-1)
 

@@ -20,9 +20,14 @@ result_path = result_dir + f"{m}:Round{r}OutputPos{s}.txt"
 
 test_feature_path = feature_dir + f"{m}:FRound{r}InputData{s}.npy"
 
+cluster_index_path = dir + f"ClusterRound{r}Index{s}_S.npy"
+clu_index = np.load(cluster_index_path)
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 test_feature = np.load(test_feature_path)
+if m == 5:
+    test_feature = test_feature[clu_index]
 test_feature = torch.from_numpy(test_feature).float().to(device)
 
 # input_dim = 2 * 2 * 8 * 4 * 2 + 408

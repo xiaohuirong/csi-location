@@ -27,6 +27,10 @@ o = args.over
 dir = f"data/round{r}/s{s}/data/"
 feature_dir = f"data/round{r}/s{s}/feature/"
 
+cluster_index_path = dir + f"ClusterRound{r}Index{s}_S.npy"
+if m == 5:
+    clu_index = np.load(cluster_index_path)
+
 if m == 4:
     feature_path = feature_dir + f"{m}:FRound{r}InputData{s}.npy"
 else:
@@ -40,9 +44,13 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 feature = np.load(feature_path)
+if m == 5:
+    feature = feature[clu_index]
 feature = torch.from_numpy(feature).float().to(device)
 
 pos = np.load(pos_path)
+if m == 5:
+    pos = pos[clu_index]
 pos = torch.from_numpy(pos).float().to(device)
 
 if args.test:
@@ -98,9 +106,11 @@ epoch_num = args.epoch
 if args.test:
     test_dataloader = DataLoader(test_dataset, batch_size=2000, shuffle=False)
 
-if args.method == 4:
+if args.method == 4 or m == 5:
     dmg_path = f"data/round{r}/s{s}/feature/Port{p}Over{o}Dmg{r}Scene{s}.npy"
     dmg = np.load(dmg_path)
+    if m == 5:
+        dmg = dmg[clu_index, :][:, clu_index]
     dmg = torch.from_numpy(dmg).to(device)
 
 with tqdm.tqdm(total=epoch_num) as bar:
@@ -118,7 +128,7 @@ with tqdm.tqdm(total=epoch_num) as bar:
 
             pre_pos = model(feature)
 
-            if m == 4:
+            if m == 4 or m == 5:
                 loss = cal_loss(pre_pos, dmg[index, :][:, index])
             else:
                 diff = torch.norm(pos - pre_pos, dim=-1)
