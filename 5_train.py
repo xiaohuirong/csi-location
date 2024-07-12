@@ -31,7 +31,7 @@ cluster_index_path = dir + f"ClusterRound{r}Index{s}_S.npy"
 if m == 5:
     clu_index = np.load(cluster_index_path)
 
-if m == 4:
+if m == 4 or m == 5:
     feature_path = feature_dir + f"{m}:FRound{r}InputData{s}.npy"
 else:
     feature_path = feature_dir + f"{m}:FRound{r}InputData{s}_S.npy"
@@ -49,8 +49,6 @@ if m == 5:
 feature = torch.from_numpy(feature).float().to(device)
 
 pos = np.load(pos_path)
-if m == 5:
-    pos = pos[clu_index]
 pos = torch.from_numpy(pos).float().to(device)
 
 if args.test:
