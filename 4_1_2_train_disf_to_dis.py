@@ -29,24 +29,25 @@ test_pos_path = dir + f"Test{args.seed}Round{r}InputPos{s}_S.npy"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-feature = np.load(feature_path)
+feature = np.load(feature_path).reshape(2000 * 2000, 12)
 feature = torch.from_numpy(feature).float().to(device)
 pos = np.load(pos_path)
-pos = torch.from_numpy(pos).float().to(device)
+dis = np.linalg.norm(
+    pos.reshape(1, 2000, 2) - pos.reshape(2000, 1, 2), axis=-1
+).reshape(2000 * 2000, 1)
+dis = torch.from_numpy(dis).float().to(device)
 
-feature = feature.view(2000 * 2000, 12)
-dis = torch.norm(pos.view(1, 2000, 2) - pos.view(2000, 1, 2), dim=-1)
-dis = dis.view(2000 * 2000, 1)
 dataset = CustomDataset5(feature, dis)
 
 if args.test:
-    test_feature = np.load(test_feature_path)
+    test_feature = np.load(test_feature_path).reshape(2000 * 2000, 12)
     test_feature = torch.from_numpy(test_feature).float().to(device)
     test_pos = np.load(test_pos_path)
-    test_pos = torch.from_numpy(test_pos).float().to(device)
-    test_feature = test_feature.view(2000 * 2000, 12)
-    test_dis = torch.norm(pos.view(1, 2000, 2) - pos.view(2000, 1, 2), dim=-1)
-    test_dis = test_dis.view(2000 * 2000, 1)
+    test_dis = np.linalg.norm(
+        test_pos.reshape(1, 2000, 2) - test_pos.reshape(2000, 1, 2), axis=-1
+    )
+
+    test_dis = torch.from_numpy(test_dis).float().to(device)
     test_dataset = CustomDataset5(test_feature, test_dis)
 
 # default : 2000 * 2000
@@ -102,6 +103,7 @@ with tqdm.tqdm(total=epoch_num) as bar:
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+            break
         mean_all_loss = torch.mean(torch.tensor(all_loss))
         # print(f"train loss: {mean_all_loss.item()}")
         writer.add_scalar("rate/train_loss", mean_all_loss.item(), epoch)
