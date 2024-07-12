@@ -105,10 +105,7 @@ if args.method == 4:
 
 with tqdm.tqdm(total=epoch_num) as bar:
     for epoch in range(epoch_num):
-        if m == 4:
-            dataloader = CustomDataLoader(dataset, batch_size=batch_size, data=dmg)
-        else:
-            dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
         all_loss = []
         for batch in dataloader:
             if m == 3:
