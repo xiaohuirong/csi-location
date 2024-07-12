@@ -22,4 +22,4 @@ H = H.reshape(bsz, port_num, 2, ant_num // 2, sr_num)
 
 h = np.fft.ifft(H[:, p, o, :, :])[:, :, 0:100]
 
-np.save(data_part_path, h)
+np.save(data_part_path, h.astype(np.complex64))

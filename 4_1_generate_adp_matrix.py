@@ -18,7 +18,7 @@ data_part_path = f"data/round{r}/s{s}/data/Port{p}Over{o}Round{r}InputData{s}.np
 adp_path = f"data/round{r}/s{s}/feature/Port{p}Over{o}Adp{r}Scene{s}.npy"
 
 # (20000, 32, 100)
-H = np.load(data_part_path, mmap_mode="r")
+H = np.load(data_part_path)
 [bsz, ant_num, sr_num] = H.shape
 
 adp_dissimilarity_matrix = np.zeros((bsz, bsz), dtype=np.float32)
