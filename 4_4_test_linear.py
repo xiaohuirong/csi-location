@@ -18,6 +18,10 @@ if not args.test:
 dmg_path = f"data/round{r}/s{s}/feature/Port{p}Over{o}Dmg{r}Scene{s}.npy"
 dis_path = f"data/round{r}/s{s}/feature/Dis{r}Scene{s}.npy"
 
+index_path = f"data/round{r}/s{s}/data/Round{r}InputPos{s}.txt"
+
+index = np.loadtxt(index_path)[:, 0].astype(np.int32) - 1
+
 dis = np.load(dis_path)
 dmg = np.load(dmg_path)
 
@@ -45,7 +49,11 @@ def plot_dissimilarity_over_euclidean_distance(
                 bin_values, [25, 50, 75]
             )
         except:
-            print("missing")
+            bin_25_perc[i - 1], bin_medians[i - 1], bin_75_perc[i - 1] = (
+                bin_25_perc[i - 2],
+                bin_medians[i - 2],
+                bin_75_perc[i - 2],
+            )
 
     plt.plot(bins[:-1], bin_medians, label=label)
     plt.fill_between(bins[:-1], bin_25_perc, bin_75_perc, alpha=0.5)
@@ -53,7 +61,9 @@ def plot_dissimilarity_over_euclidean_distance(
 
 plt.figure(figsize=(8, 4))
 
-plot_dissimilarity_over_euclidean_distance(dmg, dis, "Dmg")
+plot_dissimilarity_over_euclidean_distance(
+    dmg[index, :][:, index], dis[index, :][:, index], "Dmg"
+)
 
 plt.legend()
 plt.xlabel("Euclidean Distance [m]")
