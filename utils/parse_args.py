@@ -43,6 +43,12 @@ def parse_args():
     parser.add_argument("--epoch", type=int, default=5000,
         help="Total epoch")
 
+    parser.add_argument("--filter", type=int, default=1000,
+        help="Adp filter size")
+
+    parser.add_argument("--label", type=int, default=10,
+        help="label number")
+
     parser.add_argument('--test', action='store_true', default=False, 
                         help='Enable test or not.')
 
@@ -54,6 +60,9 @@ def parse_args():
 
     parser.add_argument("--method", type=int, default=1,
         help="Solve method")
+
+    parser.add_argument("--clusters", type=str, default="[0, 2, 4]",
+        help="cluster")
 
     args = parser.parse_args()
 
