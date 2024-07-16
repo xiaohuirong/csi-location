@@ -27,6 +27,16 @@ def get_color_map(positions):
     return rgb_values
 
 
+def affine_transform_channel_chart(groundtruth_pos, channel_chart_pos):
+    pad = lambda x: np.hstack([x, np.ones((x.shape[0], 1))])
+    unpad = lambda x: x[:, :-1]
+    A, res, rank, s = np.linalg.lstsq(
+        pad(channel_chart_pos), pad(groundtruth_pos), rcond=None
+    )
+    transform = lambda x: unpad(np.dot(pad(x), A))
+    return transform(channel_chart_pos)
+
+
 args = parse_args()
 show_args(args)
 
@@ -43,12 +53,14 @@ clu_index = np.load(cluster_index_path)
 pre_pos_path = result_dir + f"{m}:Round{r}OutputPos{s}.txt"
 pre_pos = np.loadtxt(pre_pos_path)
 
+
 if args.test:
     truth_pos_path = data_dir + f"Round{r}GroundTruth{s}.txt"
     truth_pos = np.loadtxt(truth_pos_path)
 
     if m == 5:
         truth_pos = truth_pos[clu_index]
+        pre_pos = affine_transform_channel_chart(truth_pos, pre_pos)
 
     distance = np.linalg.norm(truth_pos - pre_pos, axis=-1)
 
@@ -65,5 +77,9 @@ axes[1].scatter(pre_pos[:, 0], pre_pos[:, 1], c=color, alpha=0.8)
 
 axes[0].set_aspect("equal", "box")
 axes[1].set_aspect("equal", "box")
+#axes[0].set_xlim(-180, -20)
+#axes[0].set_ylim(-100, 150)
+#axes[1].set_xlim(-180, -20)
+#axes[1].set_ylim(-100, 150)
 fig.tight_layout()
 plt.show()

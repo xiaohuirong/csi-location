@@ -18,7 +18,8 @@ f = args.filter
 feature_dir = f"data/round{r}/s{s}/feature/"
 data_dir = f"data/round{r}/s{s}/data/"
 
-adpf_path = feature_dir + f"Port{p}Over{o}Filter{f}Adp{r}Scene{s}.npy"
+# adpf_path = feature_dir + f"Port{p}Over{o}Filter{f}Adp{r}Scene{s}.npy"
+adpf_path = feature_dir + f"Port{p}Over{o}Dmg{r}Scene{s}.npy"
 label_path = feature_dir + f"Port{p}Over{o}Label{args.label}Round{r}Scene{s}.npy"
 inputindex_s_path = data_dir + f"Round{r}Index{s}_S.npy"
 inputpos_s_path = data_dir + f"Round{r}InputPos{s}_S.npy"
@@ -68,7 +69,7 @@ x = np.arange(args.label)
 ax[1].bar(x, nb_per_label_all / 10, alpha=0.5, label="ALL")
 ax[1].bar(x, nb_per_label, alpha=0.5, label="TEST")
 
-g_10 = np.where(nb_per_label_all / 10 / nb_per_label > 2)[0]
+g_10 = np.where(nb_per_label_all / 10 / (nb_per_label + 1e-6) > 2)[0]
 print(g_10)
 
 ax[0].set_aspect("equal", "box")
