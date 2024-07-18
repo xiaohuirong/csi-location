@@ -22,7 +22,7 @@ cluster_index_path = data_dir + f"ClusterRound{r}Index{s}_S.npy"
 
 all_data_path = data_dir + f"Round{r}InputData{s}.npy"
 
-all_data = np.load(all_data_path).astype(np.complex64)
+# all_data = np.load(all_data_path).astype(np.complex64)
 
 clusters = ast.literal_eval(args.clusters)
 print(clusters)
@@ -35,7 +35,7 @@ for i in range(len(labels)):
         indices.append(i)
 print(len(indices))
 
-cluster_data = all_data[indices]
+# cluster_data = all_data[indices]
 
-np.save(cluster_data_path, cluster_data)
+# np.save(cluster_data_path, cluster_data)
 np.save(cluster_index_path, indices)

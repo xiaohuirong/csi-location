@@ -126,6 +126,127 @@ class CustomDataset5(Dataset):
         return sample
 
 
+class CustomDataset6:
+    def __init__(
+        self, feature, dmg, known_pos, known_pos_index, in_index, out_index, device
+    ):
+        self.device = device
+        self.feature = feature
+        self.dmg = dmg
+        self.known_pos = known_pos
+        self.known_pos_index = known_pos_index
+        self.in_index = in_index
+        self.out_index = out_index
+
+        self.known_feature = self.feature[self.known_pos_index]
+        self.out_feature = self.feature[self.out_index]
+        self.known_num = self.known_feature.shape[0]
+        self.out_num = self.out_feature.shape[0]
+
+        self.known_dis = torch.norm(
+            self.known_pos.view(self.known_num, 1, 2)
+            - self.known_pos.view(1, self.known_num, 2),
+            dim=-1,
+        )
+        self.known_dmg = self.dmg[self.known_pos_index, :][:, self.known_pos_index]
+        self.known_out_dmg = self.dmg[self.known_pos_index, :][:, self.out_index]
+        self.out_dmg = self.dmg[self.out_index, :][:, self.out_index]
+
+    def get_known_feature_pos(self, mini_bsz, shuffle=False):
+        if shuffle:
+            idxs = torch.randperm(self.known_num, device=self.device)
+        else:
+            idxs = torch.arange(self.known_num, device=self.device)
+
+        num_batches = (self.known_num + mini_bsz - 1) // mini_bsz
+
+        mini_batches = []
+        for i in range(num_batches):
+            start_idx = i * mini_bsz
+            end_idx = min(start_idx + mini_bsz, self.known_num)
+            idx = idxs[start_idx:end_idx]
+            mini_batch = {
+                "feature": self.known_feature[idx],
+                "pos": self.known_pos[idx],
+            }
+            mini_batches.append(mini_batch)
+
+        return mini_batches
+
+    def get_known_pos_dmg(self, mini_bsz, shuffle=False):
+        if shuffle:
+            idxs = torch.randperm(self.known_num, device=self.device)
+        else:
+            idxs = torch.arange(self.known_num, device=self.device)
+
+        num_batches = (self.known_num + mini_bsz - 1) // mini_bsz
+
+        mini_batches = []
+        for i in range(num_batches):
+            start_idx = i * mini_bsz
+            end_idx = min(start_idx + mini_bsz, self.known_num)
+            idx = idxs[start_idx:end_idx]
+            mini_batch = {
+                "pos": self.known_pos[idx],
+                "dmg": self.known_dmg[idx, :][:, idx],
+                "index": idx,
+            }
+            mini_batches.append(mini_batch)
+
+        return mini_batches
+
+    def get_known_out(self, mini_bsz, shuffle=False):
+        if shuffle:
+            idxs = torch.randperm(self.out_num, device=self.device)
+        else:
+            idxs = torch.arange(self.out_num, device=self.device)
+
+        num_batches = (self.out_num + mini_bsz - 1) // mini_bsz
+
+        mini_batches = []
+        for i in range(num_batches):
+            start_idx = i * mini_bsz
+            end_idx = min(start_idx + mini_bsz, self.out_num)
+            idx = idxs[start_idx:end_idx]
+
+            mini_batch = {
+                "feature": self.out_feature[idx],
+                "pos": self.known_pos,
+                "dmg": self.known_out_dmg[:, idx],
+            }
+            mini_batches.append(mini_batch)
+
+        return mini_batches
+
+    def get_out(self, mini_bsz, shuffle=False):
+        if shuffle:
+            idxs = torch.randperm(self.out_num, device=self.device)
+        else:
+            idxs = torch.arange(self.out_num, device=self.device)
+
+        num_batches = (self.out_num + mini_bsz - 1) // mini_bsz
+
+        mini_batches = []
+        for i in range(num_batches):
+            start_idx = i * mini_bsz
+            end_idx = min(start_idx + mini_bsz, self.out_num)
+            idx = idxs[start_idx:end_idx]
+
+            mini_batch = {
+                "feature": self.out_feature[idx],
+                "dmg": self.out_dmg[idx, :][:, idx],
+            }
+            mini_batches.append(mini_batch)
+
+        return mini_batches
+
+    def get_in_data(self):
+        pass
+
+    def get_out_data(self):
+        pass
+
+
 class MLP(nn.Module):
     def __init__(self, input_dim, embedding_dim):
         super(MLP, self).__init__()
@@ -193,7 +314,18 @@ class MLP2(nn.Module):
         return x
 
 
-def cal_loss(pre_pos, h_dis):
+class SMLP(nn.Module):
+    def __init__(self):
+        super(SMLP, self).__init__()
+
+        self.fc1 = nn.Linear(2, 2)
+
+    def forward(self, x):
+        x = self.fc1(x)
+        return x
+
+
+def cal_loss(pre_pos1, pre_pos2, h_dis, threshold=50):
     """
     input:
         pre_pos: (bsz, 2) -> pre_dis: (bsz, bsz)
@@ -202,15 +334,21 @@ def cal_loss(pre_pos, h_dis):
     output:
         loss: pre_dis - h_dis
     """
-    bsz = pre_pos.shape[0]
+    bsz1 = pre_pos1.shape[0]
+    bsz2 = pre_pos2.shape[0]
+
+    mask = h_dis > threshold
 
     # diff_pos (bsz, bsz, 2)
-    diff_pos = pre_pos.reshape(bsz, 1, 2) - pre_pos.reshape(1, bsz, 2)
+    diff_pos = pre_pos1.reshape(bsz1, 1, 2) - pre_pos2.reshape(1, bsz2, 2)
 
     # pre_dis (bsz, bsz)
     pre_dis = torch.norm(diff_pos, dim=-1)
 
-    loss = torch.mean(torch.abs(pre_dis - h_dis))
+    losses = torch.abs(pre_dis - h_dis)
+    losses[mask] = 0
+
+    loss = torch.mean(losses)
 
     return loss
 

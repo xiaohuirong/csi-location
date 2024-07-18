@@ -87,6 +87,11 @@ if m == 3:
     model = MLP(input_dim // k * 3, embedding_dim).to(device)
 else:
     model = MLP(input_dim, embedding_dim).to(device)
+result_dir = f"data/round{r}/s{s}/result/"
+result_path = result_dir + f"{m}:M{args.tseed}Round{r}Scene{s}.pth"
+if args.load:
+    model.load_state_dict(torch.load(result_path))
+
 optimizer = optim.Adam(model.parameters(), lr=lr)
 scheduler = lr_scheduler.StepLR(optimizer, step_size=step, gamma=gamma)
 
@@ -113,7 +118,7 @@ if args.method == 4 or m == 5:
 
 with tqdm.tqdm(total=epoch_num) as bar:
     for epoch in range(epoch_num):
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
         all_loss = []
         for batch in dataloader:
             if m == 3:
@@ -161,7 +166,5 @@ with tqdm.tqdm(total=epoch_num) as bar:
 
         bar.update(1)
 
-result_dir = f"data/round{r}/s{s}/result/"
-result_path = result_dir + f"{m}:M{args.tseed}Round{r}Scene{s}.pth"
 
 torch.save(model.state_dict(), result_path)
