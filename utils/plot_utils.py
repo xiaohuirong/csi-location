@@ -124,7 +124,7 @@ def pos_plot(poses):
     fig, axes = plt.subplots(figsize=(5, 5))
     i = 0
     for pos in poses:
-        axes.scatter(pos[:, 0], pos[:, 1], alpha=0.8, label=f"{i}")
+        axes.scatter(pos[:, 0], pos[:, 1], alpha=0.8, label=f"{i}", s=1)
         i += 1
         print(np.min(pos[:, 0]))
     axes.set_aspect("equal", "box")

@@ -2,6 +2,7 @@ import torch
 import numpy as np
 from utils.parse_args import parse_args, show_args
 from net.MLP import MLP, set_seed
+from utils.cal_utils import turn_back
 
 args = parse_args()
 set_seed(args.tseed)
@@ -16,12 +17,13 @@ feature_dir = f"data/round{r}/s{s}/feature/"
 result_dir = f"data/round{r}/s{s}/result/"
 weight_path = result_dir + f"{m}:M{args.tseed}Round{r}Scene{s}.pth"
 
-result_path = result_dir + f"{m}:Round{r}OutputPos{s}.txt"
+result_path = result_dir + f"{m}:Round{r}OutputPos{s}.npy"
 
 test_feature_path = feature_dir + f"{m}:FRound{r}InputData{s}.npy"
 
 cluster_index_path = dir + f"ClusterRound{r}Index{s}_S.npy"
-clu_index = np.load(cluster_index_path)
+if m == 5:
+    clu_index = np.load(cluster_index_path)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -42,4 +44,11 @@ model.load_state_dict(torch.load(weight_path))
 show_args(args)
 
 test_pre_pos = model(test_feature)
-np.savetxt(result_path, test_pre_pos.detach().cpu().numpy(), fmt="%.4f")
+
+test_pre_pos = test_pre_pos.detach().cpu().numpy()
+
+if args.turn:
+    test_pre_pos = turn_back(r, s, test_pre_pos)
+
+# np.savetxt(result_path, test_pre_pos.detach().cpu().numpy(), fmt="%.4f")
+np.save(result_path, test_pre_pos)

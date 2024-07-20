@@ -58,19 +58,29 @@ if args.test:
             pre_pos = affine_transform_channel_chart(
                 know_pos[indices], pre_pos[indices2], pre_pos
             )
+    else:
+        if r == 0:
+            truth_pos_path = data_dir + f"Round{r}GroundTruth{s}.txt"
+            truth_pos = np.loadtxt(truth_pos_path)
+
+            distance = np.linalg.norm(truth_pos - pre_pos, axis=-1)
+
+            mean_distance = np.mean(distance)
+            print(mean_distance)
+
 
 
 color = get_color_map(pre_pos)
 
 fig, axes = plt.subplots(1, 2, figsize=(20, 10))
 
-axes[1].scatter(pre_pos[:, 0], pre_pos[:, 1], c=color, alpha=0.8)
+axes[1].scatter(pre_pos[:, 0], pre_pos[:, 1], c=color, alpha=0.8, s=1)
 if args.test:
     if r == 0:
-        axes[0].scatter(truth_pos[:, 0], truth_pos[:, 1], c=color, alpha=0.8)
+        axes[0].scatter(truth_pos[:, 0], truth_pos[:, 1], c=color, alpha=0.8, s=1)
     else:
-        axes[0].scatter(know_pos[indices, 0], know_pos[indices, 1], alpha=0.8)
-        axes[1].scatter(pre_pos[indices2, 0], pre_pos[indices2, 1], alpha=0.8)
+        axes[0].scatter(know_pos[indices, 0], know_pos[indices, 1], alpha=0.8, s=1)
+        axes[1].scatter(pre_pos[indices2, 0], pre_pos[indices2, 1], alpha=0.8, s=1)
 print(pre_pos.shape)
 
 axes[0].set_aspect("equal", "box")

@@ -128,6 +128,8 @@ show_args(args)
 # default : 5000
 epoch_num = args.epoch
 
+batch_sizes = [1000, 1000, 1000]
+
 for i in range(3):
     model = models[i]
     optimizer = optimizers[i]
@@ -141,15 +143,17 @@ for i in range(3):
         for epoch in range(epoch_num):
             if i == 0:
                 dataloader = dataset.get_known_pos_dmg(
-                    mini_bsz=batch_size, shuffle=False
+                    mini_bsz=batch_sizes[i], shuffle=False
                 )
             elif i == 1:
                 dataloader = dataset.get_known_feature_pos(
-                    mini_bsz=batch_size, shuffle=False
+                    mini_bsz=batch_sizes[i], shuffle=False
                 )
             elif i == 2:
-                dataloader = dataset.get_known_out(mini_bsz=batch_size, shuffle=False)
-                dataloader2 = dataset.get_out(mini_bsz=batch_size, shuffle=False)
+                dataloader = dataset.get_known_out(
+                    mini_bsz=batch_sizes[i], shuffle=False
+                )
+                dataloader2 = dataset.get_out(mini_bsz=batch_sizes[i], shuffle=True)
 
             elif i == 3:
                 dataloader = dataset.get_out(mini_bsz=batch_size, shuffle=False)
@@ -178,7 +182,7 @@ for i in range(3):
                     pre_pos = model(feature)
                     chart_pre_pos = models[0](pre_pos)
 
-                    loss = cal_loss(chart_pos, chart_pre_pos, dmg, 50)
+                    loss = cal_loss(chart_pos, chart_pre_pos, dmg, 80)
 
                     feature = dataloader2[k]["feature"]
                     dmg = dataloader2[k]["dmg"]
@@ -186,7 +190,7 @@ for i in range(3):
                     chart_pre_pos = models[0](pre_pos)
                     loss2 = cal_loss(chart_pre_pos, chart_pre_pos, dmg, 50)
 
-                    loss = loss + loss2
+                    loss = 0.5 * loss + loss2
 
                     # poses.append(pre_pos.detach().cpu().numpy())
 

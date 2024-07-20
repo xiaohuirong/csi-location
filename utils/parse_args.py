@@ -52,6 +52,9 @@ def parse_args():
     parser.add_argument('--test', action='store_true', default=False, 
                         help='Enable test or not.')
 
+    parser.add_argument('--turn', action='store_true', default=False, 
+                        help='Trun to square')
+
     parser.add_argument('--load', action='store_true', default=False, 
                         help='load')
 

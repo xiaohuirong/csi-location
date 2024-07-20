@@ -54,16 +54,50 @@ if m == 1:
         h_max = h_max.reshape(2000, 2, 2, 8, 4)
 
         # 第一个天线
-        h_max_conj = np.conj(h_max[:, :, :, 0, :]).reshape(2000, 2, 2, 1, 4)
+        # h_max_conj = np.conj(h_max[:, :, :, 0, :]).reshape(2000, 2, 2, 1, 4)
+        h_max_conj = np.conj(h_max).reshape(2000, 2, 2, 32, 1)
+        h_max = h_max.reshape(2000, 2, 2, 1, 32)
 
         h_diff = h_max * h_max_conj
         h_diff = h_diff / np.abs(h_diff)
 
-        h_diff = h_diff.reshape(2000, 2 * 2 * 8 * 4)
+        # h_diff = h_diff.reshape(2000, 2 * 2 * 8 * 4)
+        h_diff = h_diff.reshape(2000, 2 * 2 * 32 * 32)
 
         h_diff_real = h_diff.real
         h_diff_imag = h_diff.imag
 
+        # h_max_conj = np.conj(h_max[:, :, :, :, 0]).reshape(2000, 2, 2, 8, 1)
+
+        # h_diff = h_max * h_max_conj
+        # h_diff = h_diff / np.abs(h_diff)
+
+        # h_diff = h_diff.reshape(2000, 2 * 2 * 8 * 4)
+
+        # h_diff_real_2 = h_diff.real
+        # h_diff_imag_2 = h_diff.imag
+
+        # h_max_angle = np.angle(h_max)
+        # diff_angle = np.diff(h_max_angle, axis=3) % (2 * np.pi) - np.pi
+        # diff_angle = diff_angle.reshape(2000, 2 * 2 * 7 * 4)
+        # diff_angle2 = np.diff(h_max_angle, axis=4) % (2 * np.pi) - np.pi
+        # diff_angle2 = diff_angle2.reshape(2000, 2 * 2 * 8 * 3)
+
+        # feature = np.concatenate(
+        #     (sum_power, h_diff_real, h_diff_imag, h_diff_real_2, h_diff_imag_2), axis=-1
+        # )
+        # feature = np.concatenate(
+        #     (
+        #         sum_power,
+        #         diff_angle,
+        #         diff_angle2,
+        #         h_diff_real,
+        #         h_diff_imag,
+        #         h_diff_real_2,
+        #         h_diff_imag_2,
+        #     ),
+        #     axis=-1,
+        # )
         feature = np.concatenate((sum_power, h_diff_real, h_diff_imag), axis=-1)
         if np.size(all_feature) == 0:
             all_feature = feature

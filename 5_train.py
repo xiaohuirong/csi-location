@@ -14,6 +14,7 @@ from net.MLP import (
     cal_loss,
     CustomDataLoader,
 )
+from utils.cal_utils import turn_to_square, turn_back
 
 args = parse_args()
 set_seed(args.tseed)
@@ -44,16 +45,23 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 feature = np.load(feature_path)
+# feature = feature[:, 408:]
 if m == 5:
     feature = feature[clu_index]
 feature = torch.from_numpy(feature).float().to(device)
 
 pos = np.load(pos_path)
+
+if args.turn:
+    pos = turn_to_square(r, s, pos)
 pos = torch.from_numpy(pos).float().to(device)
 
 if args.test:
     test_feature = np.load(test_feature_path)
+    # test_feature = test_feature[:, 408:]
     test_pos = np.load(test_pos_path)
+    if args.turn:
+        test_pos = turn_to_square(r, s, test_pos)
     test_feature = torch.from_numpy(test_feature).float().to(device)
     test_pos = torch.from_numpy(test_pos).float().to(device)
 
@@ -118,7 +126,7 @@ if args.method == 4 or m == 5:
 
 with tqdm.tqdm(total=epoch_num) as bar:
     for epoch in range(epoch_num):
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
         all_loss = []
         for batch in dataloader:
             if m == 3:
@@ -130,6 +138,9 @@ with tqdm.tqdm(total=epoch_num) as bar:
                 index = batch["index"]
 
             pre_pos = model(feature)
+
+            # if args.turn:
+            #     pre_pos = torch.clip(pre_pos, 0, 200)
 
             if m == 4 or m == 5:
                 loss = cal_loss(pre_pos, dmg[index, :][:, index])
