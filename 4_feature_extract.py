@@ -30,14 +30,16 @@ save_path_test = (
 
 all_feature = []
 
+
 if m == 1:
     H = np.load(inputdata_path, mmap_mode="r")
     bsz = H.shape[0]
-    slice_num = bsz // 2000
+    batch = np.min([2000, H.shape[0]])
+    slice_num = bsz // batch
     for i in range(slice_num):
         print(i)
-        start = 2000 * i
-        end = 2000 * (i + 1)
+        start = batch * i
+        end = batch * (i + 1)
 
         # (2000, 2, 64, 408)
         h = np.fft.ifft(H[start:end])
@@ -49,20 +51,23 @@ if m == 1:
 
         max_indexs = np.argmax(sum_power, axis=-1)
 
+        pre_dis = max_indexs * 299.792458 / (408 * 0.24)
+        pre_dis = pre_dis.reshape(pre_dis.shape[0], 1)
+
         # (2000, 2, 64)
-        h_max = h[np.arange(2000), :, :, max_indexs]
-        h_max = h_max.reshape(2000, 2, 2, 8, 4)
+        h_max = h[np.arange(batch), :, :, max_indexs]
+        h_max = h_max.reshape(batch, 2, 2, 8, 4)
 
         # 第一个天线
         # h_max_conj = np.conj(h_max[:, :, :, 0, :]).reshape(2000, 2, 2, 1, 4)
-        h_max_conj = np.conj(h_max).reshape(2000, 2, 2, 32, 1)
-        h_max = h_max.reshape(2000, 2, 2, 1, 32)
+        h_max_conj = np.conj(h_max).reshape(batch, 2, 2, 32, 1)
+        h_max = h_max.reshape(batch, 2, 2, 1, 32)
 
         h_diff = h_max * h_max_conj
         h_diff = h_diff / np.abs(h_diff)
 
         # h_diff = h_diff.reshape(2000, 2 * 2 * 8 * 4)
-        h_diff = h_diff.reshape(2000, 2 * 2 * 32 * 32)
+        h_diff = h_diff.reshape(batch, 2 * 2 * 32 * 32)
 
         h_diff_real = h_diff.real
         h_diff_imag = h_diff.imag
@@ -98,7 +103,7 @@ if m == 1:
         #     ),
         #     axis=-1,
         # )
-        feature = np.concatenate((sum_power, h_diff_real, h_diff_imag), axis=-1)
+        feature = np.concatenate((pre_dis, h_diff_real, h_diff_imag), axis=-1)
         if np.size(all_feature) == 0:
             all_feature = feature
         else:

@@ -130,3 +130,11 @@ def pos_plot(poses):
     axes.set_aspect("equal", "box")
     axes.legend()
     plt.show()
+
+
+def show_pos(pos):
+    fig, axes = plt.subplots(figsize=(5, 5))
+    axes.scatter(pos[:, 0], pos[:, 1], alpha=0.8, s=1)
+    axes.set_aspect("equal", "box")
+    axes.legend()
+    plt.show()

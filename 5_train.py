@@ -14,7 +14,8 @@ from net.MLP import (
     cal_loss,
     CustomDataLoader,
 )
-from utils.cal_utils import turn_to_square, turn_back
+from utils.cal_utils import turn_to_square, rotate_center_to_y
+from utils.plot_utils import show_pos
 
 args = parse_args()
 set_seed(args.tseed)
@@ -48,9 +49,19 @@ feature = np.load(feature_path)
 # feature = feature[:, 408:]
 if m == 5:
     feature = feature[clu_index]
+
+if m == 11:
+    # feature = feature[:, 408:]
+    feature = np.abs(feature)
 feature = torch.from_numpy(feature).float().to(device)
 
 pos = np.load(pos_path)
+
+if m == 11:
+    pos = rotate_center_to_y(pos, s, r)
+    pos[:, 0] = np.abs(pos[:, 0])
+    show_pos(pos)
+
 
 if args.turn:
     pos = turn_to_square(r, s, pos)

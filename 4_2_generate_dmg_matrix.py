@@ -23,6 +23,10 @@ dmg_path = f"data/round{r}/s{s}/feature/Port{p}Over{o}Dmg{r}Scene{s}.npy"
 n_neighbors = 20
 adp = np.load(adp_path, mmap_mode="r")
 
+adp = np.clip(adp, 0, None)
+
+print(np.min(adp))
+
 nbrs_alg = NearestNeighbors(n_neighbors=n_neighbors, metric="precomputed", n_jobs=-1)
 nbrs = nbrs_alg.fit(adp)
 nbg = sklearn.neighbors.kneighbors_graph(

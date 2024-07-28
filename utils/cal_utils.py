@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.signal import butter, filtfilt
+from scipy.stats import mode
 
 s_3 = np.sqrt(3)
 A = [[200, 0], [0, 200]]
@@ -9,7 +11,7 @@ P2 = [[100 * s_3, -100], [0, 200], [-100 * s_3, -100]]
 def turn_to_square(r, s, pos):
     if r == 0:
         P = P1
-    elif r == 1:
+    else:
         P = P2
 
     i = s - 1
@@ -29,7 +31,7 @@ def turn_to_square(r, s, pos):
 def turn_back(r, s, pos):
     if r == 0:
         P = P1
-    elif r == 1:
+    else:
         P = P2
 
     i = s - 1
@@ -44,3 +46,159 @@ def turn_back(r, s, pos):
     t_pos = np.dot(T, pos.T).T
 
     return t_pos
+
+
+def rotate_points(points, angle_degrees):
+    """
+    Rotate a set of 2D points clockwise by a given angle.
+
+    Parameters:
+    points (ndarray): An array of shape (bsz, 2) containing the (x, y) coordinates of the points.
+    angle_degrees (float): The angle to rotate the points, in degrees.
+
+    Returns:
+    ndarray: An array of shape (bsz, 2) containing the new (x, y) coordinates of the rotated points.
+    """
+    angle_radians = np.radians(angle_degrees)
+    rotation_matrix = np.array(
+        [
+            [np.cos(angle_radians), np.sin(angle_radians)],
+            [-np.sin(angle_radians), np.cos(angle_radians)],
+        ]
+    )
+    rotated_points = np.dot(points, rotation_matrix.T)
+    return rotated_points
+
+
+def remap1(pos, A=[[50, 60], [-165, -160]]):
+    B = [[50, 100 * s_3], [-165, -100]]
+
+    A = np.linalg.inv(A)
+
+    T = np.dot(B, A)
+
+    pos = np.dot(T, pos.T).T
+
+    return pos
+
+
+def remove_outliers_and_compute_mean(data):
+    """
+    去除数据中的离群点并计算平均值
+
+    参数:
+    data (numpy.ndarray): 输入数据数组
+
+    返回:
+    float: 去除离群点后的平均值
+    """
+    # 计算四分位数
+    Q1 = np.percentile(data, 25)
+    Q3 = np.percentile(data, 75)
+    IQR = Q3 - Q1
+
+    # 计算上下限
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    # 去除离群点
+    filtered_data = data[(data >= lower_bound) & (data <= upper_bound)]
+
+    return filtered_data
+
+
+def cal_aoa_tof(h, r, s):
+    """
+    h : (bsz, 2, 64, 408)
+    """
+    bsz = h.shape[0]
+
+    abs_h = np.abs(h)
+    sum_abs_h = np.sum(abs_h, axis=(1, 2))
+
+    max_index1 = np.argmax(sum_abs_h[:, :67], axis=-1)
+    max_index2 = mode(np.argmax(abs_h[..., :67], -1).reshape(bsz, 2 * 64), axis=-1).mode
+
+    max_index = max_index2
+
+    tobsz = np.arange(bsz)
+
+    h_max = h[tobsz, :, :, max_index]
+
+    h_max = h_max.reshape(bsz, 4, 8, 4)
+
+    angle = np.angle(h_max)
+
+    angle_diff = -((np.diff(angle, axis=2) + np.pi) % (2 * np.pi) - np.pi) / np.pi
+    angle_diff = angle_diff.reshape(bsz, 4 * 7 * 4)
+
+    angle_diff2 = -((np.diff(angle, axis=3) + np.pi) % (2 * np.pi) - np.pi) / (
+        4 * np.pi
+    )
+    angle_diff2 = angle_diff2.reshape(bsz, 4 * 8 * 3)
+
+    aoa = []
+    aop = []
+
+    for i in range(bsz):
+        f_data = remove_outliers_and_compute_mean(angle_diff[i])
+        f_data2 = remove_outliers_and_compute_mean(angle_diff2[i])
+        aoa.append(np.mean(f_data))
+        aop.append(np.mean(f_data2))
+
+    max_index = max_index - 2
+    l0 = max_index < 0
+    max_index[l0] = 0
+
+    tof = max_index * 299.792458 / (408 * 0.24)
+
+    return np.arccos(np.array(aoa)), tof, np.arccos(np.array(aop)), max_index2
+
+
+def rotate_center_to_y(pos, s, r):
+    if r == 2 or r == 1:
+        if s == 6 or s == 3:
+            pos = rotate_points(pos, 180)
+        elif s == 5 or s == 2:
+            pos = rotate_points(pos, 60)
+        elif s == 4 or s == 1:
+            pos = rotate_points(pos, -60)
+
+    return pos
+
+
+def rotate_center_back(pos, s, r):
+    if r == 2:
+        if s == 6 or s == 3:
+            pos = rotate_points(pos, -180)
+        elif s == 5 or s == 2:
+            pos = rotate_points(pos, -60)
+        elif s == 4 or s == 1:
+            pos = rotate_points(pos, 60)
+
+    return pos
+
+
+def my_filter(subcarrier_samples):
+    # 采样频率（根据你的描述，子载波之间的间隔是240KHz）
+    fs = 240e3  # 240 KHz
+
+    # 带通滤波器的设计参数
+    center_freq = 3.5e9  # 中心频率3.5 GHz
+    bandwidth = 1e6  # 带宽1 MHz（可根据实际情况调整）
+
+    lowcut = (center_freq - bandwidth / 2) / fs
+    highcut = (center_freq + bandwidth / 2) / fs
+
+    # 设计Butterworth带通滤波器
+    order = 5  # 滤波器的阶数（可根据实际情况调整）
+    b, a = butter(order, [lowcut, highcut], btype="band")
+
+    # 应用滤波器
+    filtered_samples = filtfilt(b, a, subcarrier_samples, axis=-1)
+
+    return filtered_samples
+
+
+def most_similar(index):
+    return index
