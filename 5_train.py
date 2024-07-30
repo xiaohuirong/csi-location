@@ -14,7 +14,7 @@ from net.MLP import (
     cal_loss,
     CustomDataLoader,
 )
-from utils.cal_utils import turn_to_square, rotate_center_to_y
+from utils.cal_utils import turn_to_square, rotate_center_to_y, rotate_center_back
 from utils.plot_utils import show_pos
 
 args = parse_args()
@@ -50,17 +50,23 @@ feature = np.load(feature_path)
 if m == 5:
     feature = feature[clu_index]
 
-if m == 11:
-    # feature = feature[:, 408:]
-    feature = np.abs(feature)
+# if m == 11:
+#     # feature = feature[:, 408:]
+#     feature = np.abs(feature)
 feature = torch.from_numpy(feature).float().to(device)
 
 pos = np.load(pos_path)
 
 if m == 11:
     pos = rotate_center_to_y(pos, s, r)
-    pos[:, 0] = np.abs(pos[:, 0])
-    show_pos(pos)
+    # show_pos(pos)
+    # show_pos(rotate_center_back(pos, s, r))
+
+if m == 12:
+    pos = rotate_center_to_y(pos, s, r)
+    rho = np.linalg.norm(pos, axis=-1)
+    phi = (np.arctan2(pos[:, 1], pos[:, 0]) - np.pi / 6) * 100
+    pos = np.column_stack((rho, phi))
 
 
 if args.turn:
@@ -106,12 +112,16 @@ if m == 3:
     model = MLP(input_dim // k * 3, embedding_dim).to(device)
 else:
     model = MLP(input_dim, embedding_dim).to(device)
+
+if args.cp != "None":
+    model.load_state_dict(torch.load(args.cp))
+
 result_dir = f"data/round{r}/s{s}/result/"
 result_path = result_dir + f"{m}:M{args.tseed}Round{r}Scene{s}.pth"
 if args.load:
     model.load_state_dict(torch.load(result_path))
 
-optimizer = optim.Adam(model.parameters(), lr=lr)
+optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=0.01)
 scheduler = lr_scheduler.StepLR(optimizer, step_size=step, gamma=gamma)
 
 writer = SummaryWriter(f"runs/R{r}S{s}M{m}-{args.time}")
@@ -155,6 +165,9 @@ with tqdm.tqdm(total=epoch_num) as bar:
 
             if m == 4 or m == 5:
                 loss = cal_loss(pre_pos, dmg[index, :][:, index])
+            elif m == 12:
+                diff = torch.square(pos - pre_pos)
+                loss = torch.mean(diff)
             else:
                 diff = torch.norm(pos - pre_pos, dim=-1)
                 loss = torch.mean(diff)

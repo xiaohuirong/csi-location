@@ -70,6 +70,9 @@ def parse_args():
     parser.add_argument("--clusters", type=str, default="[0, 2, 4]",
         help="cluster")
 
+    parser.add_argument("--cp", type=str, default="None",
+        help="load parameter")
+
     args = parser.parse_args()
 
     # fmt: on

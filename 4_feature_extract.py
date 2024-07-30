@@ -1,6 +1,7 @@
 import numpy as np
 
 from utils.parse_args import parse_args, show_args
+from utils.cal_utils import cal_aoa_tof_feature
 
 args = parse_args()
 show_args(args)
@@ -47,9 +48,11 @@ if m == 1:
         power = np.square(np.abs(h))
 
         # (2000, 408)
-        sum_power = np.sum(power, axis=(1, 2))
+        sum_power = np.mean(power, axis=(1, 2))
 
         max_indexs = np.argmax(sum_power, axis=-1)
+
+        # sum_power /= sum_power[np.arange(batch), max_indexs].reshape(batch, 1)
 
         pre_dis = max_indexs * 299.792458 / (408 * 0.24)
         pre_dis = pre_dis.reshape(pre_dis.shape[0], 1)
@@ -71,6 +74,8 @@ if m == 1:
 
         h_diff_real = h_diff.real
         h_diff_imag = h_diff.imag
+
+        feature_new = cal_aoa_tof_feature(h, r, s)
 
         # h_max_conj = np.conj(h_max[:, :, :, :, 0]).reshape(2000, 2, 2, 8, 1)
 
@@ -103,7 +108,32 @@ if m == 1:
         #     ),
         #     axis=-1,
         # )
-        feature = np.concatenate((pre_dis, h_diff_real, h_diff_imag), axis=-1)
+        feature = np.concatenate((sum_power, h_diff_real, h_diff_imag), axis=-1)
+
+        feature = np.concatenate((feature_new, feature), axis=-1)
+        if np.size(all_feature) == 0:
+            all_feature = feature
+        else:
+            all_feature = np.concatenate((all_feature, feature), axis=0)
+
+    save_path = feature_dir + f"{m}:" + "F" + args.data
+    np.save(save_path, all_feature)
+
+elif m == 100:
+    H = np.load(inputdata_path, mmap_mode="r")
+    bsz = H.shape[0]
+    batch = np.min([2000, H.shape[0]])
+    slice_num = bsz // batch
+    for i in range(slice_num):
+        print(i)
+        start = batch * i
+        end = batch * (i + 1)
+
+        # (2000, 2, 64, 408)
+        h = np.fft.ifft(H[start:end])
+
+        feature = cal_aoa_tof_feature(h, r, s)
+
         if np.size(all_feature) == 0:
             all_feature = feature
         else:

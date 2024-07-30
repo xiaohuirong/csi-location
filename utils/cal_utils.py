@@ -107,6 +107,81 @@ def remove_outliers_and_compute_mean(data):
     return filtered_data
 
 
+def fill_out_with_mean(data):
+    """
+    去除数据中的离群点并计算平均值
+
+    参数:
+    data (numpy.ndarray): 输入数据数组
+
+    返回:
+    float: 去除离群点后的平均值
+    """
+    # 计算四分位数
+    Q1 = np.percentile(data, 25)
+    Q3 = np.percentile(data, 75)
+    IQR = Q3 - Q1
+
+    # 计算上下限
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    # 去除离群点
+    filtered_data = data[(data >= lower_bound) & (data <= upper_bound)]
+
+    mean_data = np.mean(filtered_data)
+
+    data[(data >= lower_bound) & (data <= upper_bound)] = mean_data
+
+    return data
+
+
+def cal_aoa_tof_feature(h, r, s):
+    """
+    h : (bsz, 2, 64, 408)
+    """
+    bsz = h.shape[0]
+
+    abs_h = np.abs(h)
+
+    all_max_index_2 = np.argmax(abs_h[..., :67], -1).reshape(bsz, 2 * 64)
+    max_index2 = mode(all_max_index_2, axis=-1).mode
+
+    max_index = max_index2
+
+    tobsz = np.arange(bsz)
+
+    h_max = h[tobsz, :, :, max_index]
+
+    h_max = h_max.reshape(bsz, 4, 8, 4)
+
+    angle = np.angle(h_max)
+
+    angle_diff = -((np.diff(angle, axis=2) + np.pi) % (2 * np.pi) - np.pi) / np.pi
+    angle_diff = angle_diff.reshape(bsz, 4 * 7 * 4)
+
+    angle_diff2 = -((np.diff(angle, axis=3) + np.pi) % (2 * np.pi) - np.pi) / (
+        4 * np.pi
+    )
+    angle_diff2 = angle_diff2.reshape(bsz, 4 * 8 * 3)
+
+    aoa = []
+    aop = []
+
+    for i in range(bsz):
+        f_data = fill_out_with_mean(angle_diff[i])
+        f_data2 = fill_out_with_mean(angle_diff2[i])
+        aoa.append(f_data)
+        aop.append(f_data2)
+
+    aoa = np.arccos(np.array(aoa)) / np.pi
+    aop = np.arccos(np.array(aop)) / np.pi
+
+    all_feature = np.concatenate((aoa, aop, all_max_index_2 / 67.0), axis=-1)
+
+    return all_feature
+
+
 def cal_aoa_tof(h, r, s):
     """
     h : (bsz, 2, 64, 408)
@@ -114,10 +189,10 @@ def cal_aoa_tof(h, r, s):
     bsz = h.shape[0]
 
     abs_h = np.abs(h)
-    sum_abs_h = np.sum(abs_h, axis=(1, 2))
 
-    max_index1 = np.argmax(sum_abs_h[:, :67], axis=-1)
-    max_index2 = mode(np.argmax(abs_h[..., :67], -1).reshape(bsz, 2 * 64), axis=-1).mode
+    all_max_index = np.argmax(abs_h[..., :67], -1).reshape(bsz, 2 * 64)
+
+    max_index2 = mode(all_max_index, axis=-1).mode
 
     max_index = max_index2
 

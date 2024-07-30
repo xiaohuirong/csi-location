@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from utils.parse_args import parse_args, show_args
 from net.MLP import MLP, set_seed
-from utils.cal_utils import turn_back
+from utils.cal_utils import turn_back, rotate_center_back
 
 args = parse_args()
 set_seed(args.tseed)
@@ -53,9 +53,21 @@ test_pre_pos = model(test_feature)
 test_pre_pos = test_pre_pos.detach().cpu().numpy()
 
 if m == 11:
-    aoa = np.load(aoa_path)
-    g0 = aoa > 0
-    test_pre_pos[g0, 0] = -test_pre_pos[g0, 0]
+    test_pre_pos = rotate_center_back(test_pre_pos, s, r)
+    # aoa = np.load(aoa_path)
+    # g0 = aoa > 0
+    # test_pre_pos[g0, 0] = -test_pre_pos[g0, 0]
+if m == 12:
+    rho = test_pre_pos[:, 0]
+    phi = test_pre_pos[:, 1] / 100 + np.pi / 6
+
+    pre_x = rho * np.cos(phi)
+    pre_y = rho * np.sin(phi)
+
+    test_pre_pos = np.column_stack((pre_x, pre_y))
+
+    test_pre_pos = rotate_center_back(test_pre_pos, s, r)
+
 
 if args.turn:
     test_pre_pos = turn_back(r, s, test_pre_pos)
