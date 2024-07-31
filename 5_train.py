@@ -45,22 +45,48 @@ test_pos_path = dir + f"Test{args.seed}Round{r}InputPos{s}_S.npy"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
+pos = np.load(pos_path)
+
+if m == 11:
+    pos = rotate_center_to_y(pos, s, r)
+    if s == 3:
+        s2 = 1
+        dir2 = f"data/round{r}/s{s2}/data/"
+        pos_path2 = dir2 + f"Round{r}InputPos{s2}_S.npy"
+        pos2 = np.load(pos_path2)
+        pos2 = rotate_center_to_y(pos2, s2, r)
+        pos = np.vstack((pos, pos2))
+    elif s == 6:
+        s2 = 4
+        dir2 = f"data/round{r}/s{s2}/data/"
+        pos_path2 = dir2 + f"Round{r}InputPos{s2}_S.npy"
+        pos2 = np.load(pos_path2)
+        pos2 = rotate_center_to_y(pos2, s2, r)
+        pos = np.vstack((pos, pos2))
+
+    # show_pos(pos)
+    # show_pos(rotate_center_back(pos, s, r))
+
 feature = np.load(feature_path)
 # feature = feature[:, 408:]
 if m == 5:
     feature = feature[clu_index]
 
-# if m == 11:
-#     # feature = feature[:, 408:]
-#     feature = np.abs(feature)
-feature = torch.from_numpy(feature).float().to(device)
-
-pos = np.load(pos_path)
-
 if m == 11:
-    pos = rotate_center_to_y(pos, s, r)
-    # show_pos(pos)
-    # show_pos(rotate_center_back(pos, s, r))
+    if s == 3:
+        s2 = 1
+        feature_dir2 = f"data/round{r}/s{s2}/feature/"
+        feature_path2 = feature_dir2 + f"{m}:FRound{r}InputData{s2}_S.npy"
+        feature2 = np.load(feature_path2)
+        feature = np.vstack((feature, feature2))
+    elif s == 6:
+        s2 = 4
+        feature_dir2 = f"data/round{r}/s{s2}/feature/"
+        feature_path2 = feature_dir2 + f"{m}:FRound{r}InputData{s2}_S.npy"
+        feature2 = np.load(feature_path2)
+        feature = np.vstack((feature, feature2))
+
+feature = torch.from_numpy(feature).float().to(device)
 
 if m == 12:
     pos = rotate_center_to_y(pos, s, r)

@@ -145,6 +145,7 @@ def cal_aoa_tof_feature(h, r, s):
     abs_h = np.abs(h)
 
     all_max_index_2 = np.argmax(abs_h[..., :67], -1).reshape(bsz, 2 * 64)
+
     max_index2 = mode(all_max_index_2, axis=-1).mode
 
     max_index = max_index2
@@ -168,16 +169,40 @@ def cal_aoa_tof_feature(h, r, s):
     aoa = []
     aop = []
 
+    mean_aop = []
+    mean_aoa = []
+
     for i in range(bsz):
         f_data = fill_out_with_mean(angle_diff[i])
         f_data2 = fill_out_with_mean(angle_diff2[i])
         aoa.append(f_data)
         aop.append(f_data2)
 
+        mean_aoa.append(np.mean(f_data))
+        mean_aop.append(np.mean(f_data2))
+
+    mean_aoa = np.arccos(np.array(mean_aoa))
+    mean_aop = np.arccos(np.array(mean_aop))
+    mean_tof = max_index2 * 299.792458 / (408 * 0.24)
+    mean_x = mean_tof * np.cos(mean_aoa)
+    mean_y = mean_tof * np.sin(mean_aoa)
+
+    mean_values = np.column_stack(
+        (
+            mean_aoa / np.pi,
+            mean_aop / np.pi,
+            max_index2 / 67.0,
+            mean_x / 200.0,
+            mean_y / 200.0,
+        )
+    )
+
     aoa = np.arccos(np.array(aoa)) / np.pi
     aop = np.arccos(np.array(aop)) / np.pi
 
-    all_feature = np.concatenate((aoa, aop, all_max_index_2 / 67.0), axis=-1)
+    all_feature = np.concatenate(
+        (aoa, aop, all_max_index_2 / 67.0, mean_values), axis=-1
+    )
 
     return all_feature
 
@@ -190,6 +215,10 @@ def cal_aoa_tof(h, r, s):
 
     abs_h = np.abs(h)
 
+    # if s >= 4:
+    #     all_max_index = np.argmax(abs_h[..., : 67 + 13], -1).reshape(bsz, 2 * 64)
+    # else:
+    #     all_max_index = np.argmax(abs_h[..., :67], -1).reshape(bsz, 2 * 64)
     all_max_index = np.argmax(abs_h[..., :67], -1).reshape(bsz, 2 * 64)
 
     max_index2 = mode(all_max_index, axis=-1).mode

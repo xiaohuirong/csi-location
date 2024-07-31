@@ -29,6 +29,10 @@ save_path_test = (
     feature_dir + f"{m}:" + "F" + f"Test{args.seed}Round{r}InputData{s}_S.npy"
 )
 
+# if s >= 4:
+#     diff_index_path = feature_dir + f"Round{r}DiffIndex{s}.npy"
+#     diff_index = np.load(diff_index_path)
+
 all_feature = []
 
 
@@ -44,6 +48,11 @@ if m == 1:
 
         # (2000, 2, 64, 408)
         h = np.fft.ifft(H[start:end])
+
+        # if s >= 4:
+        #     diff_index_s = diff_index[start:end]
+        #     for kk in range(batch):
+        #         h[kk, :, :, :] = np.roll(h[kk, :, :, :], diff_index_s[kk], axis=-1)
 
         power = np.square(np.abs(h))
 
