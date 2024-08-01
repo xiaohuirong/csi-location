@@ -1,22 +1,31 @@
-`{r}`对应比赛轮数，`{s}`代表场景， `{m}`代表使用的方法，`{dir}`定义为`data/round{r}/s{s}`。
+# 使用CSI信息对用户进行定位
 
-初始数据组织结果如下:
+`{r}`对应比赛轮数，`{s}`代表场景。
+
+数据组织结构如下:
 
 ```shell
-tree.txt
+root
 └── data
     └── round{r}
         └── s{s}
             ├── data
-            │   ├── Round{r}CfgData{s}.txt     # 配置文件
-            │   ├── Round{r}GroundTruth{s}.txt # 所有点坐标
-            │   ├── Round{r}InputData{s}.txt   # 所有信道数据
-            │   └── Round{r}InputPos{s}.txt    # 锚点坐标
-            ├── feature						   # 存放特征
-            └── result						   # 存放数量网络参数和输出结果
+            │   ├── Round{r}CfgData{s}.txt     # 场景配置
+            │   ├── Round{r}Index{s}_S.npy     # 锚点索引
+            │   ├── Round{r}InputData{s}.npy   # CSI信息
+            │   ├── Round{r}InputData{s}_S.npy # 锚点CSI信息
+            │   ├── Round{r}InputPos{s}_S.npy  # 锚点位置
+            │   └── Round{r}InputPos{s}.txt    # 锚点位置(txt)
+            ├── feature
+            │   ├── FRound{r}InputData{s}.npy  # 特征
+            │   └── FRound{r}InputData{s}_S.npy# 锚点特征
+            └── result
+                ├── M0Round{r}Scene{s}.pth     # 模型参数
+                ├── Round{r}OutputPos{s}.npy   # 输出坐标
+                └── Round{r}OutputPos{s}.txt   # 处理后的输出坐标
 ```
 
-# 方法一: 基于每个点的信道特征
+
 
 ## 1. 数据类型转换
 
@@ -26,15 +35,6 @@ tree.txt
 python 1_data_convert.py --round {r} --scene {s}
 ```
 
-**输入:** 
-
-- 配置文件:`{dir}/data/Round{r}CfgData{s}.txt`
-- 信道数据:`{dir}/data/Round{r}InputData{s}.txt`
-
-**输出:**
-
-- npy格式信道数据:`{dir}/data/Round{r}InputData{s}.npy`
-
 ## 2. 数据切片
 
 切片出描点对应的信道信息
@@ -42,17 +42,6 @@ python 1_data_convert.py --round {r} --scene {s}
 ```shell
 python 2_data_slice.py --round {r} --scene {s}
 ```
-
-**输入:**
-
-- npy格式信道数据:`{dir}/data/Round{r}InputData{s}.npy`
-- 锚点坐标和索引:`{dir}/data/Round{r}InputPos{s}.txt`
-
-**输出:**
-
-- 锚点信道数据切片: `{dir}/data/Round{r}InputData{s}_S.npy`
-- 锚点位置: `{dir}/data/Round{r}InputPos{s}_S.npy`
-- 描点数据索引: `{dir}/data/Round{r}Index{s}_S.npy`
 
 ## 3.  生成测试数据切片(可选)
 
@@ -62,123 +51,141 @@ python 2_data_slice.py --round {r} --scene {s}
 python 3_generate_test_data.py --round {r} --scene {s}
 ```
 
-**输入:**
-
-- npy格式信道数据:`{dir}/data/Round{r}InputData{s}.npy`
-- 所有点坐标: `{dri}/data/Round{r}GroundTruth{s}.txt`
-
-**输出:**
-
-- 测试信道数据切片: `{dir}/data/TestRound{r}InputData{s}_S.npy`
-
-- 测试信道对应的位置: `{dir}/data/TestRound{r}InputPos{s}_S.npy`
-
-- 测试信道索引: `{dir}/data/Test{args.seed}Round{r}Index{s}_S.npy`
-
 ## 4. 特征提取
 
 1. 提取所有点信道特征
 
    ```shell
-   python 4_feature_extract.py --round {r} --scene {s} --data Round{r}InputData{s}.npy --method {m}
+   python 4_feature_extract.py --round {r} --scene {s}
    ```
-
-   **输入:**
-
-   - 所有点信道数据:`{dir}/data/Round{r}InputData{s}.npy`
-
-   **输出:**
-
-   - 所有信道特征:`{dir}/feature/{m}:FRound{r}InputData{s}.npy`
 
 2. 提取锚点信道特征
 
    ```shell
-   python 4_feature_extract.py --round {r} --scene {s} --data Round{r}InputData{s}_S.npy --method {m}
+   python 4_feature_extract.py --round {r} --scene {s} --slice
    ```
-
-   **输入:**
-
-   - 锚点信道数据:`{dir}/data/Round{r}InputData{s}_S.npy`
-
-   **输出:**
-
-   - 锚点信道特征:`{dir}/feature/{m}:FRound{r}InputData{s}_S.npy`
 
 3. 提取测试信道特征(可选)
 
    ```shell
-   python 4_feature_extract.py --round {r} --scene {s} --data TestRound{r}InputData{s}_S.npy --method {m}
+   python 4_feature_extract.py --round {r} --scene {s} --test
    ```
 
-   **输入:**
-
-   - 测试信道数据:`{dir}/data/TestRound{r}InputData{s}_S.npy`
-
-   **输出:**
-
-   - 测试信道特征:`{dir}/feature/{m}:FTestRound{r}InputData{s}_S.npy`
 
 ## 5. 训练
 
 利用已有特征训练神经网络，并保存神经网络参数
 
 ```shell
-python 5_train.py --round {r} --scene {s} --bsz 10 --method {m} --tseed 0 [--test]
+python 5_train.py --round {r} --scene {s} [--bsz 10] [--tseed 0] [--test]
 ```
 
-可以指定`--test`参数来控制添加测试集测试
+- `--bsz`: 指定批次大小
+- `--tseed`:指定训练随机种子
+- `--test`:是否使用测试数据检测模型精确度
 
-**输入：**
-
-- 锚点特征: `{dir}/feature/{m}:FRound{r}InputData{s}_S.npy`
--  锚点位置: `{dir}/feature/Round{r}InputPos{s}_S.npy}`
-- 测试点信道特征(可选): `{dir}/feature/{m}:FTestRound{r}InputData{s}_S.npy`
-- 测试点位置(可选):`{dir}/feature/TestRound{r}InputPos{s}_S.npy}`
-
-**输出:**
-
-- 神经网络权重：`{dir}/result/{m}:M{args.tseed}Round{r}Scene{s}.pth`
-
-## 6. 估计位置
+## 6. 估计位置(推理的过程)
 
 使用神经网络权重估计位置
 
 ```shell
-python 6_cal_pos.py --round {r} --scene {s} --method {m}
+python 6_cal_pos.py --round {r} --scene {s}
 ```
 
-**输入:**
+## 7. 修正位置
 
-- 神经网络权重：`{dir}/result/{m}:M{args.tseed}Round{r}Scene{s}.pth`
-- 所有信道特征: `{dir}/feature/{m}:FRound{r}InputData{s}.npy`
-
-**输出:**
-
-- 所有点估计坐标: `{dir}/result/{m}:Round{r}OutputPos{s}.txt`
-
-
-
-## 7. 评估性能指标
-
-评估具体场景下的性能差异
+修正超出扇区范围的数据，使其处于扇区内
 
 ```shell
-python 7_benchmark.py --round {m} --scene {m} --method {m}
+python 7_fix_out_of_range.py --round {r} --scene {s}
 ```
 
-**输入:**
+## 8. 数据回填
 
-- 所有点估计坐标: `{dir}/result/{m}:Round{r}OutputPos{s}.txt`
-- 所有点真实坐标: `{dir}/data/Round{r}InputPos{s}.txt`
+将锚点位置回填到预测的位置中
 
-**输出:**
-
-- 打印平均距离误差
-- 在对应位置绘制估计点散点图
+```shell
+python 8_fill_back.py --round {r} --scene {s}
+```
 
 
 
+**针对复赛数据的复现步骤：**
 
+场景1
 
-先训练1, 2然后3用1的参数加上1的样本训练，训练4, 5然后6用4的参数加上4的样本训练。之后各自读取自己的参数，然后降低学习率到1e-4重新训练。
+```shell
+python 1_data_convert.py --round 2 --scene 1 # 需要把解压的txt原始信道数据放置到data/round2/s{s}/data中
+python 2_data_slice.py --round 2 --scene 1
+python 4_feature_extract.py --round 2 --scene 1
+python 4_feature_extract.py --round 2 --scene 1 --slice
+python 5_train.py --round 2 --scene 1 --bsz 10
+python 6_cal_pos.py --round 2 --scene 1
+python 7_fix_out_of_range.py --round 2 --scene 1
+python 8_fill_back.py --round 2 --scene 1
+```
+
+场景1
+
+```shell
+python 1_data_convert.py --round 2 --scene 2 # 需要把解压的txt原始信道数据放置到data/round2/s{s}/data中
+python 2_data_slice.py --round 2 --scene 2
+python 4_feature_extract.py --round 2 --scene 2
+python 4_feature_extract.py --round 2 --scene 2 --slice
+python 5_train.py --round 2 --scene 2 --bsz 10
+python 6_cal_pos.py --round 2 --scene 2
+python 7_fix_out_of_range.py --round 2 --scene 2
+python 8_fill_back.py --round 2 --scene 2
+```
+
+场景3
+
+```shell
+python 1_data_convert.py --round 2 --scene 3 # 需要把解压的txt原始信道数据放置到data/round2/s{s}/data中
+python 2_data_slice.py --round 2 --scene 3
+python 4_feature_extract.py --round 2 --scene 3
+python 4_feature_extract.py --round 2 --scene 3 --slice
+python 5_train.py --round 2 --scene 3 --bsz 10 --cp data/round2/s1/result/M0Round2Scene1.pth
+python 6_cal_pos.py --round 2 --scene 3
+python 7_fix_out_of_range.py --round 2 --scene 3
+python 8_fill_back.py --round 2 --scene 3
+```
+
+场景4
+
+```shell
+python 1_data_convert.py --round 2 --scene 4 # 需要把解压的txt原始信道数据放置到data/round2/s{s}/data中
+python 2_data_slice.py --round 2 --scene 4
+python 4_feature_extract.py --round 2 --scene 4
+python 4_feature_extract.py --round 2 --scene 4 --slice
+python 5_train.py --round 2 --scene 4 --bsz 10
+python 6_cal_pos.py --round 2 --scene 4
+python 7_fix_out_of_range.py --round 2 --scene 4
+python 8_fill_back.py --round 2 --scene 4
+```
+
+场景5
+
+```shell
+python 1_data_convert.py --round 2 --scene 5 # 需要把解压的txt原始信道数据放置到data/round2/s{s}/data中
+python 2_data_slice.py --round 2 --scene 5
+python 4_feature_extract.py --round 2 --scene 5
+python 4_feature_extract.py --round 2 --scene 5 --slice
+python 5_train.py --round 2 --scene 5 --bsz 10
+python 6_cal_pos.py --round 2 --scene 5
+python 7_fix_out_of_range.py --round 2 --scene 5
+python 8_fill_back.py --round 2 --scene 5
+```
+
+场景6
+
+```shell
+python 1_data_convert.py --round 2 --scene 6 # 需要把解压的txt原始信道数据放置到data/round2/s{s}/data中
+python 2_data_slice.py --round 2 --scene 6
+python 4_feature_extract.py --round 2 --scene 6
+python 4_feature_extract.py --round 2 --scene 6 --slice
+python 5_train.py --round 2 --scene 6 --bsz 10 --cp data/round2/s4/result/M0Round2Scene4.pth
+python 6_cal_pos.py --round 2 --scene 6
+python 7_fix_out_of_range.py --round 2 --scene 6
+python 8_fill_back.py --round 2 --scene 6
+```
