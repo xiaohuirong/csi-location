@@ -10,25 +10,17 @@ show_args(args)
 r = args.round
 s = args.scene
 
-dir = f"data/round{r}/s{s}/data/"
-
-cfg_path = dir + f"Round{r}CfgData{s}.txt"
-inputdata_path = dir + f"Round{r}InputData{s}.txt"
-
 
 # 切片读取函数
 def read_slice_of_file(file_path, start, end):
     with open(file_path, "r") as file:
         # 使用itertools.islice进行切片处理
-
         slice_lines = list(itertools.islice(file, start, end))
-
     return slice_lines
 
 
 # 读取RoundYCfgDataX.txt中样本数信息
-
-slice_lines = read_slice_of_file(cfg_path, 1, 6)
+slice_lines = read_slice_of_file(args.cfg_path, 1, 6)
 
 info = np.loadtxt(slice_lines)
 
@@ -44,9 +36,7 @@ ant_num = int(info[3])
 # sc_num : 408
 sc_num = int(info[4])
 
-
 # 切片读取RoundYInputDataX.txt信道信息
-
 H = []
 
 slice_samp_num = 1000  # 切片样本数量
@@ -57,7 +47,9 @@ for slice_idx in range(slice_num):
     print(slice_idx)
 
     slice_lines = read_slice_of_file(
-        inputdata_path, slice_idx * slice_samp_num, (slice_idx + 1) * slice_samp_num
+        args.txt_data_path,
+        slice_idx * slice_samp_num,
+        (slice_idx + 1) * slice_samp_num,
     )
 
     Htmp = np.loadtxt(slice_lines).astype(np.float32)
@@ -73,6 +65,4 @@ for slice_idx in range(slice_num):
     else:
         H = np.concatenate((H, Htmp), axis=0)
 
-save_path = dir + f"Round{r}InputData{s}.npy"
-# H (20000, 2, 64, 408)
-np.save(save_path, H)
+np.save(args.data_path, H)

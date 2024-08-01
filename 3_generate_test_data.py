@@ -15,32 +15,23 @@ sample = np.random.choice(range(low, high + 1), sample_size, replace=False)
 r = args.round
 s = args.scene
 
-dir = f"data/round{r}/s{s}/data/"
-
-inputdata_path = dir + f"Round{r}InputData{s}.npy"
-truthpos_path = dir + f"Round{r}GroundTruth{s}.txt"
-
-if not os.path.exists(inputdata_path):
-    print(f"The file {inputdata_path} does not exist.")
+if not os.path.exists(args.data_path):
+    print(f"The file {args.data_path} does not exist.")
     exit()
 
-if not os.path.exists(truthpos_path):
-    print(f"The file {truthpos_path} does not exist.")
+if not os.path.exists(args.truth_pos_path):
+    print(f"The file {args.truth_pos_path} does not exist.")
     exit()
 
 # H (bsz, port_num, ant_num, sc_num)
-H = np.load(inputdata_path, mmap_mode="r")
+H = np.load(args.data_path, mmap_mode="r")
 
-truth_pos = np.loadtxt(truthpos_path)
+truth_pos = np.loadtxt(args.truthpos_path)
 
 h = H[sample]
 
 pos = truth_pos[sample]
 
-test_s_data = dir + f"Test{args.seed}Round{r}InputData{s}_S.npy"
-test_s_pos = dir + f"Test{args.seed}Round{r}InputPos{s}_S.npy"
-test_s_index = dir + f"Test{args.seed}Round{r}Index{s}_S.npy"
-
-np.save(test_s_data, h)
-np.save(test_s_pos, pos)
-np.save(test_s_index, sample)
+np.save(args.test_data_slice_path, h)
+np.save(args.test_pos_path, pos)
+np.save(args.test_index_path, sample)

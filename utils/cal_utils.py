@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.signal import butter, filtfilt
 from scipy.stats import mode
 
 s_3 = np.sqrt(3)
@@ -49,16 +48,6 @@ def turn_back(r, s, pos):
 
 
 def rotate_points(points, angle_degrees):
-    """
-    Rotate a set of 2D points clockwise by a given angle.
-
-    Parameters:
-    points (ndarray): An array of shape (bsz, 2) containing the (x, y) coordinates of the points.
-    angle_degrees (float): The angle to rotate the points, in degrees.
-
-    Returns:
-    ndarray: An array of shape (bsz, 2) containing the new (x, y) coordinates of the rotated points.
-    """
     angle_radians = np.radians(angle_degrees)
     rotation_matrix = np.array(
         [
@@ -83,15 +72,6 @@ def remap1(pos, A=[[50, 60], [-165, -160]]):
 
 
 def remove_outliers_and_compute_mean(data):
-    """
-    去除数据中的离群点并计算平均值
-
-    参数:
-    data (numpy.ndarray): 输入数据数组
-
-    返回:
-    float: 去除离群点后的平均值
-    """
     # 计算四分位数
     Q1 = np.percentile(data, 25)
     Q3 = np.percentile(data, 75)
@@ -108,15 +88,6 @@ def remove_outliers_and_compute_mean(data):
 
 
 def fill_out_with_mean(data):
-    """
-    去除数据中的离群点并计算平均值
-
-    参数:
-    data (numpy.ndarray): 输入数据数组
-
-    返回:
-    float: 去除离群点后的平均值
-    """
     # 计算四分位数
     Q1 = np.percentile(data, 25)
     Q3 = np.percentile(data, 75)
@@ -281,28 +252,3 @@ def rotate_center_back(pos, s, r):
             pos = rotate_points(pos, 60)
 
     return pos
-
-
-def my_filter(subcarrier_samples):
-    # 采样频率（根据你的描述，子载波之间的间隔是240KHz）
-    fs = 240e3  # 240 KHz
-
-    # 带通滤波器的设计参数
-    center_freq = 3.5e9  # 中心频率3.5 GHz
-    bandwidth = 1e6  # 带宽1 MHz（可根据实际情况调整）
-
-    lowcut = (center_freq - bandwidth / 2) / fs
-    highcut = (center_freq + bandwidth / 2) / fs
-
-    # 设计Butterworth带通滤波器
-    order = 5  # 滤波器的阶数（可根据实际情况调整）
-    b, a = butter(order, [lowcut, highcut], btype="band")
-
-    # 应用滤波器
-    filtered_samples = filtfilt(b, a, subcarrier_samples, axis=-1)
-
-    return filtered_samples
-
-
-def most_similar(index):
-    return index
