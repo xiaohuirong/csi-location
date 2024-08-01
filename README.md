@@ -25,7 +25,59 @@ root
                 └── Round{r}OutputPos{s}.txt   # 处理后的输出坐标
 ```
 
+运行环境:
 
+- CPU: i5-13400
+- GPU: RTX4060
+- OS: ArchLinux 
+
+- python: 3.12
+
+- python依赖
+
+```txt
+Package                  Version
+------------------------ ----------
+absl-py                  2.1.0
+filelock                 3.15.4
+fsspec                   2024.6.1
+grpcio                   1.65.2
+Jinja2                   3.1.4
+Markdown                 3.6
+markdown-it-py           3.0.0
+MarkupSafe               2.1.5
+mdurl                    0.1.2
+mpmath                   1.3.0
+networkx                 3.3
+numpy                    2.0.1
+nvidia-cublas-cu12       12.1.3.1
+nvidia-cuda-cupti-cu12   12.1.105
+nvidia-cuda-nvrtc-cu12   12.1.105
+nvidia-cuda-runtime-cu12 12.1.105
+nvidia-cudnn-cu12        9.1.0.70
+nvidia-cufft-cu12        11.0.2.54
+nvidia-curand-cu12       10.3.2.106
+nvidia-cusolver-cu12     11.4.5.107
+nvidia-cusparse-cu12     12.1.0.106
+nvidia-nccl-cu12         2.20.5
+nvidia-nvjitlink-cu12    12.5.82
+nvidia-nvtx-cu12         12.1.105
+pip                      24.0
+protobuf                 4.25.4
+Pygments                 2.18.0
+rich                     13.7.1
+scipy                    1.14.0
+setuptools               72.1.0
+six                      1.16.0
+sympy                    1.13.1
+tensorboard              2.17.0
+tensorboard-data-server  0.7.2
+torch                    2.4.0
+tqdm                     4.66.4
+triton                   3.0.0
+typing_extensions        4.12.2
+Werkzeug                 3.0.3
+```
 
 ## 1. 数据类型转换
 
@@ -52,6 +104,8 @@ python 3_generate_test_data.py --round {r} --scene {s}
 ```
 
 ## 4. 特征提取
+
+主要考虑的特征为天线间的相位差、PDP曲线、AoA和ToF
 
 1. 提取所有点信道特征
 
@@ -110,7 +164,9 @@ python 8_fill_back.py --round {r} --scene {s}
 
 
 
-**针对复赛数据的复现步骤：**
+## 针对复赛数据的复现步骤：
+
+针对推理过程，只需要运行`6_cal_pos.py`、`7_fix_out_of_range.py`、`8_fill_back.py`。
 
 场景1
 

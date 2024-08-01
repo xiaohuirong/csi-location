@@ -1,0 +1,6 @@
+numpy
+rich
+scipy
+torch
+tensorboard
+tqdm
