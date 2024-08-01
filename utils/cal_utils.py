@@ -1,51 +1,6 @@
 import numpy as np
 from scipy.stats import mode
 
-s_3 = np.sqrt(3)
-A = [[200, 0], [0, 200]]
-P1 = [[-100 * s_3, -100], [100 * s_3, -100], [0, 200]]
-P2 = [[100 * s_3, -100], [0, 200], [-100 * s_3, -100]]
-
-
-def turn_to_square(r, s, pos):
-    if r == 0:
-        P = P1
-    else:
-        P = P2
-
-    i = s - 1
-    p1 = P[i % 3]
-    p2 = P[(i + 1) % 3]
-    B = np.zeros((2, 2))
-    B[:, 0] = p1
-    B[:, 1] = p2
-    print(B)
-    B = np.linalg.inv(B)
-    T = np.dot(A, B)
-    t_pos = np.dot(T, pos.T).T
-
-    return t_pos
-
-
-def turn_back(r, s, pos):
-    if r == 0:
-        P = P1
-    else:
-        P = P2
-
-    i = s - 1
-    p1 = P[i % 3]
-    p2 = P[(i + 1) % 3]
-    B = np.zeros((2, 2))
-    B[:, 0] = p1
-    B[:, 1] = p2
-    print(B)
-    i_A = np.linalg.inv(A)
-    T = np.dot(B, i_A)
-    t_pos = np.dot(T, pos.T).T
-
-    return t_pos
-
 
 def rotate_points(points, angle_degrees):
     angle_radians = np.radians(angle_degrees)
@@ -57,34 +12,6 @@ def rotate_points(points, angle_degrees):
     )
     rotated_points = np.dot(points, rotation_matrix.T)
     return rotated_points
-
-
-def remap1(pos, A=[[50, 60], [-165, -160]]):
-    B = [[50, 100 * s_3], [-165, -100]]
-
-    A = np.linalg.inv(A)
-
-    T = np.dot(B, A)
-
-    pos = np.dot(T, pos.T).T
-
-    return pos
-
-
-def remove_outliers_and_compute_mean(data):
-    # 计算四分位数
-    Q1 = np.percentile(data, 25)
-    Q3 = np.percentile(data, 75)
-    IQR = Q3 - Q1
-
-    # 计算上下限
-    lower_bound = Q1 - 1.5 * IQR
-    upper_bound = Q3 + 1.5 * IQR
-
-    # 去除离群点
-    filtered_data = data[(data >= lower_bound) & (data <= upper_bound)]
-
-    return filtered_data
 
 
 def fill_out_with_mean(data):
@@ -176,58 +103,6 @@ def cal_aoa_tof_feature(h, r, s):
     )
 
     return all_feature
-
-
-def cal_aoa_tof(h, r, s):
-    """
-    h : (bsz, 2, 64, 408)
-    """
-    bsz = h.shape[0]
-
-    abs_h = np.abs(h)
-
-    # if s >= 4:
-    #     all_max_index = np.argmax(abs_h[..., : 67 + 13], -1).reshape(bsz, 2 * 64)
-    # else:
-    #     all_max_index = np.argmax(abs_h[..., :67], -1).reshape(bsz, 2 * 64)
-    all_max_index = np.argmax(abs_h[..., :67], -1).reshape(bsz, 2 * 64)
-
-    max_index2 = mode(all_max_index, axis=-1).mode
-
-    max_index = max_index2
-
-    tobsz = np.arange(bsz)
-
-    h_max = h[tobsz, :, :, max_index]
-
-    h_max = h_max.reshape(bsz, 4, 8, 4)
-
-    angle = np.angle(h_max)
-
-    angle_diff = -((np.diff(angle, axis=2) + np.pi) % (2 * np.pi) - np.pi) / np.pi
-    angle_diff = angle_diff.reshape(bsz, 4 * 7 * 4)
-
-    angle_diff2 = -((np.diff(angle, axis=3) + np.pi) % (2 * np.pi) - np.pi) / (
-        4 * np.pi
-    )
-    angle_diff2 = angle_diff2.reshape(bsz, 4 * 8 * 3)
-
-    aoa = []
-    aop = []
-
-    for i in range(bsz):
-        f_data = remove_outliers_and_compute_mean(angle_diff[i])
-        f_data2 = remove_outliers_and_compute_mean(angle_diff2[i])
-        aoa.append(np.mean(f_data))
-        aop.append(np.mean(f_data2))
-
-    max_index = max_index - 2
-    l0 = max_index < 0
-    max_index[l0] = 0
-
-    tof = max_index * 299.792458 / (408 * 0.24)
-
-    return np.arccos(np.array(aoa)), tof, np.arccos(np.array(aop)), max_index2
 
 
 def rotate_center_to_y(pos, s, r):
