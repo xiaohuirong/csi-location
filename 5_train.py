@@ -24,8 +24,9 @@ s = args.scene
 feature_path = args.feature_slice_path
 pos_path = args.pos_path
 
-test_feature_path = args.test_feature_slice_path
-test_pos_path = args.test_pos_path
+if args.test:
+    test_feature_path = args.test_feature_slice_path
+    test_pos_path = args.test_pos_path
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

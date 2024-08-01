@@ -46,8 +46,6 @@ def parse_args():
         help="Whether use slice data or not.",
     )
 
-    parser.add_argument("--method", type=int, default=1, help="Solve method")
-
     parser.add_argument("--cp", type=str, default="None", help="load parameter")
 
     args = parser.parse_args()

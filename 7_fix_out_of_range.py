@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 args = parse_args()
 show_args(args)
 r = args.round
-m = args.method
 s = args.scene
 
 pos = np.load(args.output_pos_path)
@@ -24,6 +23,6 @@ axes[0, 1].scatter(t_pos[:, 0], t_pos[:, 1], s=1)
 axes[1, 0].scatter(c_t_pos[:, 0], c_t_pos[:, 1], s=1)
 axes[1, 1].scatter(t_c_t_pos[:, 0], t_c_t_pos[:, 1], s=1)
 
-plt.show()
-
 np.savetxt(args.txt_output_pos_path, t_c_t_pos, fmt="%.4f")
+
+plt.show()

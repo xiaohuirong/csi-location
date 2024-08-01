@@ -10,7 +10,6 @@ set_seed(args.tseed)
 
 r = args.round
 s = args.scene
-m = args.method
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

@@ -14,7 +14,7 @@ if args.test:
     save_path = args.test_feature_slice_path
 else:
     if args.slice:
-        inputdata_path = args.data_slice_path
+        input_path = args.data_slice_path
         save_path = args.feature_slice_path
     else:
         input_path = args.data_path
