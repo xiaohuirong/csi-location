@@ -1,8 +1,28 @@
 # 使用CSI信息对用户进行定位
 
-`{r}`对应比赛轮数，`{s}`代表场景。
+**运行环境:**
 
-数据组织结构如下:
+- CPU: i5-13400
+- GPU: RTX4060
+- OS: ArchLinux 
+- python: 3.12
+- python依赖
+
+```txt
+Package                  Version
+------------------------ -----------
+matplotlib               3.9.1
+numpy                    2.0.1
+rich                     13.7.1
+scipy                    1.14.0
+tensorboard              2.17.0
+torch                    2.4.0
+tqdm                     4.66.4
+```
+
+## 0. 数据组织结构
+
+`{r}`对应比赛轮数，`{s}`代表场景。
 
 ```shell
 root
@@ -10,73 +30,19 @@ root
     └── round{r}
         └── s{s}
             ├── data
-            │   ├── Round{r}CfgData{s}.txt     # 场景配置
-            │   ├── Round{r}Index{s}_S.npy     # 锚点索引
-            │   ├── Round{r}InputData{s}.npy   # CSI信息
-            │   ├── Round{r}InputData{s}_S.npy # 锚点CSI信息
-            │   ├── Round{r}InputPos{s}_S.npy  # 锚点位置
-            │   └── Round{r}InputPos{s}.txt    # 锚点位置(txt)
+            │   ├── Round{r}CfgData{s}.txt     # 场景配置
+            │   ├── Round{r}Index{s}_S.npy     # 锚点索引
+            │   ├── Round{r}InputData{s}.npy   # CSI信息
+            │   ├── Round{r}InputData{s}_S.npy # 锚点CSI信息
+            │   ├── Round{r}InputPos{s}_S.npy  # 锚点位置
+            │   └── Round{r}InputPos{s}.txt    # 锚点位置(txt)
             ├── feature
-            │   ├── FRound{r}InputData{s}.npy  # 特征
-            │   └── FRound{r}InputData{s}_S.npy# 锚点特征
+            │   ├── FRound{r}InputData{s}.npy  # 特征
+            │   └── FRound{r}InputData{s}_S.npy# 锚点特征
             └── result
                 ├── M0Round{r}Scene{s}.pth     # 模型参数
                 ├── Round{r}OutputPos{s}.npy   # 输出坐标
                 └── Round{r}OutputPos{s}.txt   # 处理后的输出坐标
-```
-
-运行环境:
-
-- CPU: i5-13400
-- GPU: RTX4060
-- OS: ArchLinux 
-
-- python: 3.12
-
-- python依赖
-
-```txt
-Package                  Version
------------------------- ----------
-absl-py                  2.1.0
-filelock                 3.15.4
-fsspec                   2024.6.1
-grpcio                   1.65.2
-Jinja2                   3.1.4
-Markdown                 3.6
-markdown-it-py           3.0.0
-MarkupSafe               2.1.5
-mdurl                    0.1.2
-mpmath                   1.3.0
-networkx                 3.3
-numpy                    2.0.1
-nvidia-cublas-cu12       12.1.3.1
-nvidia-cuda-cupti-cu12   12.1.105
-nvidia-cuda-nvrtc-cu12   12.1.105
-nvidia-cuda-runtime-cu12 12.1.105
-nvidia-cudnn-cu12        9.1.0.70
-nvidia-cufft-cu12        11.0.2.54
-nvidia-curand-cu12       10.3.2.106
-nvidia-cusolver-cu12     11.4.5.107
-nvidia-cusparse-cu12     12.1.0.106
-nvidia-nccl-cu12         2.20.5
-nvidia-nvjitlink-cu12    12.5.82
-nvidia-nvtx-cu12         12.1.105
-pip                      24.0
-protobuf                 4.25.4
-Pygments                 2.18.0
-rich                     13.7.1
-scipy                    1.14.0
-setuptools               72.1.0
-six                      1.16.0
-sympy                    1.13.1
-tensorboard              2.17.0
-tensorboard-data-server  0.7.2
-torch                    2.4.0
-tqdm                     4.66.4
-triton                   3.0.0
-typing_extensions        4.12.2
-Werkzeug                 3.0.3
 ```
 
 ## 1. 数据类型转换
