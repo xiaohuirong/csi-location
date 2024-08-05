@@ -147,7 +147,7 @@ python 7_fix_out_of_range.py --round 2 --scene 1
 python 8_fill_back.py --round 2 --scene 1
 ```
 
-场景1
+场景2
 
 ```shell
 python 1_data_convert.py --round 2 --scene 2 # 需要把解压的txt原始信道数据放置到data/round2/s{s}/data中
